@@ -6,6 +6,7 @@ import Error404 from './pages/public/Error404';
 
 // Importaciones futuras que hará Tomás
 import Login from './pages/public/Login';
+import Registro from './pages/public/Registro';
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
         
        
        <Route path="/login" element={<Login />} />
+
+       <Route path='/registro' element={<Registro/>} />
 
         {/* === RUTAS PRIVADAS (Próximamente) === */}
         {/* Acá configuraremos Zustand más adelante para proteger el Dashboard */}
