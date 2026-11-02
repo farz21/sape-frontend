@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, LogOut, UserRound } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const AdminLayout = () => {
   const navigate = useNavigate();

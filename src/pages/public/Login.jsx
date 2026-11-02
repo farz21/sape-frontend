@@ -23,18 +23,57 @@ const Login = () => {
   };
 
   const manejarEnvio = (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  setMensaje("");
 
-    // Simulamos la respuesta del backend
-    const userData = { email: datos.email, rol: "empleado" };
-    const token = "fake-jwt-token-123";
+  // Usuarios simulados
+  const usuarios = [
+    {
+      email: "admin@sape.com",
+      password: "admin123",
+      nombre: "Administrador",
+      rol: "administrador",
+    },
+    {
+      email: "empleado@sape.com",
+      password: "empleado123",
+      nombre: "Empleado de prueba",
+      rol: "empleado",
+    },
+  ];
 
-    // Disparamos Zustand
-    login(userData, token);
+  // Buscamos si existe el usuario
+  const usuarioEncontrado = usuarios.find(
+    (usuario) =>
+      usuario.email === datos.email &&
+      usuario.password === datos.password
+  );
 
-    // Redirigimos al Dashboard
-    navigate("/dashboard");
+  // Si no coincide el correo o contraseña
+  if (!usuarioEncontrado) {
+    setMensaje("Correo electrónico o contraseña incorrectos.");
+    return;
+  }
+
+  // Datos que guardaremos en Zustand
+  const userData = {
+    email: usuarioEncontrado.email,
+    nombre: usuarioEncontrado.nombre,
+    rol: usuarioEncontrado.rol,
   };
+
+  const token = "fake-jwt-token-123";
+
+  // Guardamos la sesión
+  login(userData, token);
+
+  // Redirigimos según el rol
+  if (userData.rol === "administrador") {
+    navigate("/admin");
+  } else {
+    navigate("/dashboard");
+  }
+};
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50">

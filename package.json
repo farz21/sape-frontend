@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "^1.65.0",
+    "lucide-react": "^1.66.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",
@@ -31,7 +31,7 @@
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.5"
   },
-   "overrides": {
+  "overrides": {
     "minimatch": "^11.0.1"
   }
 }
