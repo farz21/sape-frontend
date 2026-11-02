@@ -1,12 +1,16 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Importaciones de páginas públicas
-import Home from './pages/public/Home';
-import Error404 from './pages/public/Error404';
+// Páginas Públicas
+import Home from "./pages/public/Home";
+import Error404 from "./pages/public/Error404";
+import Login from "./pages/public/Login";
+import Registro from "./pages/public/Registro";
 
-// Importaciones futuras que hará Tomás
-import Login from './pages/public/Login';
-import Registro from './pages/public/Registro';
+// Privadas y Seguridad
+import ProtectedRoute from "./routes/ProtectedRoute";
+import EmpleadoLayout from "./components/private/EmpleadoLayout";
+import DashboardEmpleado from "./pages/private/DashboardEmpleado";
+import EvaluacionesEmpleado from "./pages/private/EvaluacionesEmpleado";
 
 function App() {
   return (
@@ -14,16 +18,20 @@ function App() {
       <Routes>
         {/* === RUTAS PÚBLICAS === */}
         <Route path="/" element={<Home />} />
-        
-       
-       <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
 
-       <Route path='/registro' element={<Registro/>} />
+        {/* === RUTAS PRIVADAS === */}
+        <Route element={<ProtectedRoute />}>
+          {/* 2. El Layout envuelve a las páginas con el Navbar de empleado */}
+          <Route element={<EmpleadoLayout />}>
+            {/* 3. Las vistas específicas */}
+            <Route path="/dashboard" element={<DashboardEmpleado />} />
+            <Route path="/evaluaciones" element={<EvaluacionesEmpleado />} />
+          </Route>
+        </Route>
 
-        {/* === RUTAS PRIVADAS (Próximamente) === */}
-        {/* Acá configuraremos Zustand más adelante para proteger el Dashboard */}
-
-        {/* Ruta Comodín (Error 404 modularizado) */}
+        {/* Ruta Comodín */}
         <Route path="*" element={<Error404 />} />
       </Routes>
     </Router>
