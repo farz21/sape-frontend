@@ -22,45 +22,40 @@ const Login = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
+  const manejarEnvio = async (e) => { // Agregar async
   e.preventDefault();
   setMensaje("");
 
-  // Usuarios simulados
-  const usuarios = [
-    {
-      email: "admin@sape.com",
-      password: "admin123",
-      nombre: "Administrador",
-      rol: "administrador",
-    },
-    {
-      email: "empleado@sape.com",
-      password: "empleado123",
-      nombre: "Empleado de prueba",
-      rol: "empleado",
-    },
-  ];
+  try {
+    const response = await fetch("http://localhost:3000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: datos.email,
+        password: datos.password
+      }),
+    });
 
-  // Buscamos si existe el usuario
-  const usuarioEncontrado = usuarios.find(
-    (usuario) =>
-      usuario.email === datos.email &&
-      usuario.password === datos.password
-  );
+    const data = await response.json();
 
-  // Si no coincide el correo o contraseña
-  if (!usuarioEncontrado) {
-    setMensaje("Correo electrónico o contraseña incorrectos.");
-    return;
+    if (!response.ok) {
+      // Muestra el mensaje de error que viene del backend
+      setMensaje(data.mensaje || "Error al iniciar sesión");
+      return;
+    }
+
+    // data.user y data.token vienen de la respuesta de Express
+    login(data.user, data.token);
+
+    if (data.user.rol === "administrador") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
+  } catch (error) {
+    setMensaje("No se pudo conectar con el servidor.");
   }
-
-  // Datos que guardaremos en Zustand
-  const userData = {
-    email: usuarioEncontrado.email,
-    nombre: usuarioEncontrado.nombre,
-    rol: usuarioEncontrado.rol,
-  };
+};
 
   const token = "fake-jwt-token-123";
 
