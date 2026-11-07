@@ -26,13 +26,38 @@ const Registro = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
-    e.preventDefault();
+  const manejarEnvio = async (e) => { // Agregar async
+  e.preventDefault();
+  setMensaje("");
 
-    setMensaje(
-      `La solicitud para ${datos.nombre} ${datos.apellido} está lista. El registro se conectará al sistema.`,
-    );
-  };
+  try {
+    const response = await fetch("http://localhost:3000/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        empresa: datos.empresa,
+        password: datos.password
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMensaje(data.mensaje || "Error al registrar la cuenta");
+      return;
+    }
+
+    // Auto-login con los datos reales de la base de datos
+    register(data.user, data.token);
+    navigate('/dashboard');
+    
+  } catch (error) {
+    setMensaje("No se pudo conectar con el servidor.");
+  }
+};
 
   const claseInput =
     "mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
