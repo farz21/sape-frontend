@@ -31,24 +31,38 @@ const Registro = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
-    e.preventDefault();
+  const manejarEnvio = async (e) => { // Agregar async
+  e.preventDefault();
+  setMensaje("");
 
-    // Simulamos la respuesta del backend
-    const newUserData = { 
-      nombre: datos.nombre, 
-      apellido: datos.apellido, 
-      email: datos.email, 
-      empresa: datos.empresa 
-    };
-    const token = 'fake-jwt-token-456';
+  try {
+    const response = await fetch("http://localhost:3000/registro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        empresa: datos.empresa,
+        password: datos.password
+      }),
+    });
 
-    // Disparamos Zustand (Auto-login)
-    register(newUserData, token);
+    const data = await response.json();
 
-    // Redirigimos al dashboard
+    if (!response.ok) {
+      setMensaje(data.mensaje || "Error al registrar la cuenta");
+      return;
+    }
+
+    // Auto-login con los datos reales de la base de datos
+    register(data.user, data.token);
     navigate('/dashboard');
-  };
+    
+  } catch (error) {
+    setMensaje("No se pudo conectar con el servidor.");
+  }
+};
 
   // ¡Acá están las variables que faltaban!
   const claseInput =
