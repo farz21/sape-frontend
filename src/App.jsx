@@ -1,29 +1,54 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Importaciones de páginas públicas
-import Home from './pages/public/Home';
-import Error404 from './pages/public/Error404';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Importaciones futuras que hará Tomás
-import Login from './pages/public/Login';
-import Registro from './pages/public/Registro';
+// Páginas públicas
+import Home from "./pages/public/Home";
+import Error404 from "./pages/public/Error404";
+import Login from "./pages/public/Login";
+import Registro from "./pages/public/Registro";
+
+// Seguridad
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminPrivateRoutes from "./routes/AdminPivateRoutes";
+
+// Empleado
+import EmpleadoLayout from "./components/private/EmpleadoLayout";
+import DashboardEmpleado from "./pages/private/DashboardEmpleado";
+import EvaluacionesEmpleado from "./pages/private/EvaluacionesEmpleado";
+
+// Administrador
+import AdminLayout from "./pages/private/admin/AdminLayout";
+import Dashboard from "./pages/private/admin/Dashboard";
+import Empleados from "./pages/private/admin/Empleados";
+import Empleado from "./pages/private/admin/Empleado";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* === RUTAS PÚBLICAS === */}
+        {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<Home />} />
-        
-       
-       <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
 
-       <Route path='/registro' element={<Registro/>} />
+        {/* RUTAS DEL ADMINISTRADOR */}
+        <Route element={<AdminPrivateRoutes />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="empleados" element={<Empleados />} />
+            <Route path="empleados/:id" element={<Empleado />} />
+          </Route>
+        </Route>
 
-        {/* === RUTAS PRIVADAS (Próximamente) === */}
-        {/* Acá configuraremos Zustand más adelante para proteger el Dashboard */}
+        {/* RUTAS DEL EMPLEADO */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<EmpleadoLayout />}>
+            <Route path="/dashboard" element={<DashboardEmpleado />} />
+            <Route path="/evaluaciones" element={<EvaluacionesEmpleado />} />
+          </Route>
+        </Route>
 
-        {/* Ruta Comodín (Error 404 modularizado) */}
+        {/* RUTA NO ENCONTRADA */}
         <Route path="*" element={<Error404 />} />
       </Routes>
     </Router>
