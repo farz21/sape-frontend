@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Users, CircleCheck, TriangleAlert, CircleX } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from '../../../store/useAuthStore';
 import { estadoActividad } from './datosEmpleados';
 
 const Dashboard = () => {

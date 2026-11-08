@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore'; // Ajusta la ruta si es necesario
+import { useAuthStore } from '../../../store/useAuthStore'; 
 import { estadoActividad } from './datosEmpleados';
 
 const Empleados = () => {
