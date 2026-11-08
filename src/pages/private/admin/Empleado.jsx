@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, PlusCircle } from 'lucide-react';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const Empleado = () => {
   const { id } = useParams();
