@@ -22,58 +22,41 @@ const Login = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
-  e.preventDefault();
-  setMensaje("");
+  const manejarEnvio = async (e) => {
+    e.preventDefault();
+    setMensaje("");
 
-  // Usuarios simulados
-  const usuarios = [
-    {
-      email: "admin@sape.com",
-      password: "admin123",
-      nombre: "Administrador",
-      rol: "administrador",
-    },
-    {
-      email: "empleado@sape.com",
-      password: "empleado123",
-      nombre: "Empleado de prueba",
-      rol: "empleado",
-    },
-  ];
+    try {
+      const response = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: datos.email,
+          password: datos.password
+        }),
+      });
 
-  // Buscamos si existe el usuario
-  const usuarioEncontrado = usuarios.find(
-    (usuario) =>
-      usuario.email === datos.email &&
-      usuario.password === datos.password
-  );
+      const data = await response.json();
 
-  // Si no coincide el correo o contraseña
-  if (!usuarioEncontrado) {
-    setMensaje("Correo electrónico o contraseña incorrectos.");
-    return;
-  }
+      if (!response.ok) {
+        setMensaje(data.mensaje || "Error al iniciar sesión.");
+        return;
+      }
 
-  // Datos que guardaremos en Zustand
-  const userData = {
-    email: usuarioEncontrado.email,
-    nombre: usuarioEncontrado.nombre,
-    rol: usuarioEncontrado.rol,
+      // Guardamos la sesión en Zustand
+      login(data.user, data.token);
+
+      // Redirigimos según el rol
+      if (data.user.rol === "administrador") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+      setMensaje("No se pudo conectar con el servidor.");
+    }
   };
-
-  const token = "fake-jwt-token-123";
-
-  // Guardamos la sesión
-  login(userData, token);
-
-  // Redirigimos según el rol
-  if (userData.rol === "administrador") {
-    navigate("/admin");
-  } else {
-    navigate("/dashboard");
-  }
-};
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50">
@@ -86,30 +69,24 @@ const Login = () => {
             aria-label="Volver al inicio"
             className="inline-flex items-center gap-2 mb-6 text-sm font-medium transition text-slate-500 hover:text-indigo-600"
           >
-            {/* Ícono de Lucide reemplazando al texto */}
             <ArrowLeft className="w-5 h-5" />
             Volver al inicio
           </Link>
 
-          {/* Título */}
           <div className="mb-7 text-center">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
               Iniciar sesión
             </h1>
-
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Ingresa tus datos para acceder a tu espacio de trabajo.
             </p>
           </div>
 
-          {/* Formulario */}
           <form onSubmit={manejarEnvio} className="space-y-5">
-            {/* Email */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Correo electrónico
               </span>
-
               <input
                 type="email"
                 name="email"
@@ -122,12 +99,10 @@ const Login = () => {
               />
             </label>
 
-            {/* Contraseña */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Contraseña
               </span>
-
               <span className="relative block">
                 <input
                   type={mostrarPassword ? "text" : "password"}
@@ -139,7 +114,6 @@ const Login = () => {
                   required
                   className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-20 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 />
-
                 <button
                   type="button"
                   onClick={() => setMostrarPassword(!mostrarPassword)}
@@ -150,7 +124,6 @@ const Login = () => {
               </span>
             </label>
 
-            {/* Opciones */}
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
               <label className="flex items-center gap-2 text-slate-600">
                 <input
@@ -163,9 +136,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() =>
-                  setMensaje(
-                    "Contacta al administrador para recuperar tu acceso.",
-                  )
+                  setMensaje("Contacta al administrador para recuperar tu acceso.")
                 }
                 className="font-semibold text-indigo-600 hover:text-indigo-800"
               >
@@ -173,7 +144,6 @@ const Login = () => {
               </button>
             </div>
 
-            {/* Botón de ingreso */}
             <button
               type="submit"
               className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700"
@@ -181,7 +151,6 @@ const Login = () => {
               Iniciar sesión <span aria-hidden="true">→</span>
             </button>
 
-            {/* Mensaje */}
             {mensaje && (
               <p
                 role="status"
@@ -192,7 +161,6 @@ const Login = () => {
             )}
           </form>
 
-          {/* Enlace al registro */}
           <p className="mt-7 text-center text-sm text-slate-500">
             ¿Todavía no tienes cuenta?{" "}
             <Link
@@ -205,7 +173,6 @@ const Login = () => {
         </div>
       </main>
 
-      {/* Footer al pie de la página */}
       <FooterPublic />
     </div>
   );

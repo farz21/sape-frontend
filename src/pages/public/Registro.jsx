@@ -31,26 +31,42 @@ const Registro = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
+  const manejarEnvio = async (e) => {
     e.preventDefault();
+    setMensaje("");
 
-    // Simulamos la respuesta del backend
-    const newUserData = { 
-      nombre: datos.nombre, 
-      apellido: datos.apellido, 
-      email: datos.email, 
-      empresa: datos.empresa 
-    };
-    const token = 'fake-jwt-token-456';
+    try {
+      const response = await fetch("http://localhost:3000/registro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: datos.nombre,
+          apellido: datos.apellido,
+          email: datos.email,
+          empresa: datos.empresa,
+          password: datos.password
+        }),
+      });
 
-    // Disparamos Zustand (Auto-login)
-    register(newUserData, token);
+      const data = await response.json();
 
-    // Redirigimos al dashboard
-    navigate('/dashboard');
+      if (!response.ok) {
+        setMensaje(data.mensaje || "Error al registrar la cuenta.");
+        return;
+      }
+
+      // Disparamos Zustand (Auto-login)
+      register(data.user, data.token);
+
+      // Redirigimos al dashboard
+      navigate('/dashboard');
+      
+    } catch (error) {
+      console.error("Error en la petición:", error);
+      setMensaje("No se pudo conectar con el servidor.");
+    }
   };
 
-  // ¡Acá están las variables que faltaban!
   const claseInput =
     "mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 
