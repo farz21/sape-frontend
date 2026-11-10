@@ -9,14 +9,15 @@ import Registro from "./pages/public/Registro";
 // Seguridad
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
+import PublicRoute from "./routes/PublicRoute"; // <-- 1. Importa el nuevo protector
 
-// Empleado
+// Empleado 
 import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
 import DashboardEmpleado from "./pages/private/empleado/DashboardEmpleado";
 import EvaluacionesEmpleado from "./pages/private/empleado/EvaluacionesEmpleado";
 import PerfilEmpleado from "./pages/private/empleado/PerfilEmpleado";
 
-// Administrador
+// Administrador 
 import AdminLayout from "./pages/private/admin/AdminLayout";
 import Dashboard from "./pages/private/admin/Dashboard";
 import Empleados from "./pages/private/admin/Empleados";
@@ -27,10 +28,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* RUTAS PÚBLICAS */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/registro" element={<Registro />} />
+        
+        {/* RUTAS PÚBLICAS PROTEGIDAS */}
+        {/* 2. Envuelve Home, Login y Registro en el PublicRoute */}
+        <Route element={<PublicRoute />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
+        </Route>
 
         {/* RUTAS DEL ADMINISTRADOR */}
         <Route element={<AdminPrivateRoutes />}>
@@ -38,10 +43,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="empleados" element={<Empleados />} />
             <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
-            <Route
-              path="empleados/editar/:id"
-              element={<FormularioEmpleado />}
-            />
+            <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
             <Route path="empleados/:id" element={<Empleado />} />
           </Route>
         </Route>
@@ -57,6 +59,7 @@ function App() {
 
         {/* RUTA NO ENCONTRADA */}
         <Route path="*" element={<Error404 />} />
+        
       </Routes>
     </Router>
   );

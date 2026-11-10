@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useAuthStore } from "../../../../store/useAuthStore";
+import { useAuthStore } from "../../../store/useAuthStore";
 import { ArrowLeft, User, Briefcase, Mail, PlusCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
