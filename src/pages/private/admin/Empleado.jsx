@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, PlusCircle } from 'lucide-react';
-import { useAuthStore } from "../../../store/useAuthStore";
+import { useParams, Link } from 'react-router-dom';
+import { useAuthStore } from "../../../../store/useAuthStore";
+import { ArrowLeft, User, Briefcase, Mail, PlusCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Empleado = () => {
   const { id } = useParams();
@@ -11,13 +12,8 @@ const Empleado = () => {
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  // Estados para el formulario
-  const [nuevaEval, setNuevaEval] = useState({ periodo: '', puntaje: '', semaforo: 'Verde' });
-  const [mensajeForm, setMensajeForm] = useState('');
-
-  // 1. Cargar datos reales
   useEffect(() => {
-    const fetchHistorial = async () => {
+    const cargarDatos = async () => {
       try {
         const response = await fetch(`http://localhost:3000/api/empleados/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -25,122 +21,120 @@ const Empleado = () => {
         if (response.ok) {
           const data = await response.json();
           setEmpleado(data.datos);
-          setEvaluaciones(data.evaluaciones);
+          
+          // Invertimos el array para que el gráfico fluya de izquierda (más antiguo) a derecha (más reciente)
+          const historialCronologico = [...data.evaluaciones].reverse();
+          setEvaluaciones(historialCronologico);
         }
       } catch (error) {
-        console.error("Error al cargar el empleado:", error);
+        console.error("Error al cargar historial:", error);
       } finally {
         setCargando(false);
       }
     };
-    fetchHistorial();
+    cargarDatos();
   }, [id, token]);
 
-  // 2. Enviar nueva evaluación al backend
-  const manejarEnvio = async (e) => {
-    e.preventDefault();
-    setMensajeForm('');
-
-    try {
-      const response = await fetch("http://localhost:3000/api/evaluaciones", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          id_empleado: id,
-          periodo: nuevaEval.periodo,
-          puntaje_final: nuevaEval.puntaje,
-          semaforo: nuevaEval.semaforo
-        }),
-      });
-
-      if (response.ok) {
-        setMensajeForm("¡Evaluación cargada correctamente!");
-        // Opcional: Recargar la página o hacer un push al estado 'evaluaciones'
-        setTimeout(() => window.location.reload(), 1500); 
-      } else {
-        setMensajeForm("Error al cargar la evaluación.");
-      }
-    } catch (error) {
-      setMensajeForm("No se pudo conectar con el servidor.");
-    }
-  };
-
-  if (cargando) return <div className="p-8 font-semibold">Cargando datos del empleado...</div>;
-  if (!empleado) return <div className="p-8 text-rose-600">Empleado no encontrado</div>;
+  if (cargando) return <div className="p-8 text-slate-500 font-medium">Cargando legajo del empleado...</div>;
+  if (!empleado) return <div className="p-8 text-rose-500 font-medium">No se encontró el empleado.</div>;
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <Link to="/admin/empleados" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-indigo-600">
-        <ArrowLeft size={17} />Todos los empleados
-      </Link>
-      
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 mb-8">
-        <p className="text-sm font-semibold text-indigo-600">Ficha individual</p>
-        <h2 className="mt-2 text-3xl font-extrabold">{empleado.nombre} {empleado.apellido}</h2>
-        <p className="mt-2 text-slate-500">{empleado.empresa} · Registrado el {new Date(empleado.creado_en).toLocaleDateString()}</p>
-      </section>
+    <div className="max-w-5xl mx-auto">
+      {/* Encabezado y Navegación */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Link to="/admin/empleados" className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+            <ArrowLeft size={24} />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Ficha del Empleado</h1>
+            <p className="mt-1 text-sm text-slate-500">Análisis de desempeño y datos de contacto.</p>
+          </div>
+        </div>
+        
+        {/* Botón para abrir modal o ir a la vista de nueva evaluación (si la tienen) */}
+        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+          <PlusCircle size={18} />
+          Nueva Evaluación
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Columna Izquierda: Formulario de Carga */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <PlusCircle size={20} className="text-indigo-600"/> Registrar Evaluación
-          </h3>
-          <form onSubmit={manejarEnvio} className="space-y-4">
-            <label className="block text-sm font-semibold text-slate-700">
-              Período (Ej. Q1 2026)
-              <input type="text" required className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:border-indigo-500"
-                value={nuevaEval.periodo} onChange={(e) => setNuevaEval({...nuevaEval, periodo: e.target.value})} />
-            </label>
-            <label className="block text-sm font-semibold text-slate-700">
-              Puntaje (0 - 100)
-              <input type="number" required max="100" min="0" className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:border-indigo-500"
-                value={nuevaEval.puntaje} onChange={(e) => setNuevaEval({...nuevaEval, puntaje: e.target.value})} />
-            </label>
-            <label className="block text-sm font-semibold text-slate-700">
-              Semáforo
-              <select className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm outline-none focus:border-indigo-500"
-                value={nuevaEval.semaforo} onChange={(e) => setNuevaEval({...nuevaEval, semaforo: e.target.value})}>
-                <option value="Verde">Verde (Óptimo)</option>
-                <option value="Amarillo">Amarillo (Atención)</option>
-                <option value="Rojo">Rojo (Crítico)</option>
-              </select>
-            </label>
-            <button type="submit" className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
-              Guardar Evaluación
-            </button>
-            {mensajeForm && <p className="text-sm font-semibold text-emerald-600 mt-2">{mensajeForm}</p>}
-          </form>
-        </section>
-
-        {/* Columna Derecha: Historial de Evaluaciones */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold mb-4">Historial de Desempeño</h3>
-          {evaluaciones.length === 0 ? (
-            <p className="text-sm text-slate-500">Este empleado no tiene evaluaciones registradas.</p>
-          ) : (
-            <div className="space-y-3">
-              {evaluaciones.map((ev) => (
-                <div key={ev.id_evaluacion} className="p-4 border border-slate-100 rounded-lg bg-slate-50 flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-slate-800">{ev.periodo}</p>
-                    <p className="text-xs text-slate-500">{new Date(ev.fecha).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-extrabold text-indigo-600">{ev.puntaje_final}</p>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      ev.semaforo === 'Verde' ? 'bg-emerald-100 text-emerald-700' :
-                      ev.semaforo === 'Amarillo' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
-                    }`}>{ev.semaforo}</span>
-                  </div>
-                </div>
-              ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tarjeta de Información Personal */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+              <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
+                {empleado.nombre.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">{empleado.nombre} {empleado.apellido}</h2>
+                <p className="text-sm font-medium text-slate-500">ID: {empleado.id}</p>
+              </div>
             </div>
-          )}
-        </section>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Mail className="text-slate-400" size={18} />
+                <span className="text-sm text-slate-700">{empleado.email}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Briefcase className="text-slate-400" size={18} />
+                <span className="text-sm text-slate-700">{empleado.empresa || 'S.A.P.E.'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <User className="text-slate-400" size={18} />
+                <span className="text-sm text-slate-700">Ingreso: {empleado.creado_en ? new Date(empleado.creado_en).toLocaleDateString() : '-'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel del Gráfico de Evolución */}
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-bold text-slate-800 mb-2">Evolución de Desempeño</h2>
+          <p className="text-sm text-slate-500 mb-6">Puntaje final obtenido en las evaluaciones históricas.</p>
+          
+          <div className="h-72 w-full">
+            {evaluaciones.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={evaluaciones} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis 
+                    dataKey="periodo" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    domain={[0, 100]} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value) => [`${value} Pts`, 'Puntaje']}
+                    labelStyle={{ fontWeight: 'bold', color: '#334155' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="puntaje_final" 
+                    stroke="#2563eb" 
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 font-medium">
+                Este empleado aún no tiene evaluaciones registradas.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
