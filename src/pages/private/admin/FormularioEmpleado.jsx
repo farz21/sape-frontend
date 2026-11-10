@@ -16,11 +16,11 @@ const FormularioEmpleado = () => {
     nombre: '',
     apellido: '',
     email: '',
-    password: '', // Solo se usa al crear
+    password: '', 
     empresa: 'S.A.P.E.',
     legajo: '',
     fecha_ingreso: '',
-    id_puesto: 1 // Por defecto
+    id_puesto: 1 
   });
 
   // Si estamos editando, buscamos los datos actuales del empleado
