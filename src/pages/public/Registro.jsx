@@ -22,6 +22,7 @@ const Registro = () => {
   const [mensaje, setMensaje] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
@@ -38,30 +39,55 @@ const Registro = () => {
   const lasContraseñasCoinciden = 
     datos.password === "" || datos.confirmPassword === "" || datos.password === datos.confirmPassword;
 
-  const manejarEnvio = (e) => {
+  const manejarEnvio = async (e) => {
     e.preventDefault();
     setMensaje("");
 
-    // Validación final por seguridad antes de enviar
     if (datos.password !== datos.confirmPassword) {
       setMensaje("Las contraseñas no coinciden. Por favor, revísalas.");
       return;
     }
 
-    // Simulamos la respuesta del backend
-    const newUserData = { 
-      nombre: datos.nombre, 
-      apellido: datos.apellido, 
-      email: datos.email, 
-      empresa: datos.empresa 
-    };
-    const token = 'fake-jwt-token-456';
+    setCargando(true);
 
-    // Disparamos Zustand (Auto-login)
-    register(newUserData, token);
+    try {
+      // Preparamos los datos que espera tu backend (authController.js)
+      const datosRegistro = {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        password: datos.password,
+        empresa: datos.empresa || "S.A.P.E.",
+        rol: "empleado" // Por defecto al registrarse se crea como empleado con su ficha
+      };
 
-    // Redirigimos al dashboard
-    navigate('/dashboard');
+      const response = await fetch("http://localhost:3000/registro", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(datosRegistro),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.mensaje || "Error al registrar la cuenta.");
+      }
+
+      // Si el backend devuelve token y usuario en el registro, los guardamos en Zustand
+      if (data.token) {
+        register(data.usuario || datosRegistro, data.token);
+      }
+
+      // Redirigimos al dashboard del empleado
+      navigate("/empleado");
+
+    } catch (error) {
+      setMensaje(error.message || "Error al conectar con el servidor.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   const claseInput =
@@ -185,7 +211,6 @@ const Registro = () => {
             <label className={claseLabel}>
               <div className="flex justify-between items-center">
                 <span>Confirmar contraseña</span>
-                {/* Texto chiquitito de advertencia en rojo si no coinciden */}
                 {!lasContraseñasCoinciden && (
                   <span className="text-xs font-medium text-rose-600 animate-pulse">
                     Las contraseñas no coinciden
@@ -213,7 +238,7 @@ const Registro = () => {
                   onClick={() => setMostrarConfirmPassword(!mostrarConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                 >
-                  {mostrarConfirmPassword ? <EyeOff size={18} /> : <Eye size= {18} />}
+                  {mostrarConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </label>
@@ -234,18 +259,18 @@ const Registro = () => {
 
             <button
               type="submit"
-              disabled={!lasContraseñasCoinciden && datos.confirmPassword !== ""}
+              disabled={(!lasContraseñasCoinciden && datos.confirmPassword !== "") || cargando}
               className={`w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-md transition ${
-                !lasContraseñasCoinciden && datos.confirmPassword !== ""
+                (!lasContraseñasCoinciden && datos.confirmPassword !== "") || cargando
                   ? "bg-rose-400 cursor-not-allowed"
                   : "bg-indigo-600 shadow-indigo-100 hover:-translate-y-0.5 hover:bg-indigo-700"
               }`}
             >
-              Crear cuenta <span aria-hidden="true">→</span>
+              {cargando ? "Creando cuenta..." : "Crear cuenta →"}
             </button>
 
             {mensaje && (
-              <p role="status" className="rounded-lg bg-indigo-50 px-4 py-3 text-sm leading-5 text-indigo-800">
+              <p role="status" className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm leading-5 text-rose-700">
                 {mensaje}
               </p>
             )}

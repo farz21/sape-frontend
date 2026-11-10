@@ -16,62 +16,54 @@ const Login = () => {
 
   const [mensaje, setMensaje] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   const manejarCambio = (e) => {
     setDatos({ ...datos, [e.target.name]: e.target.value });
     setMensaje("");
   };
 
-  const manejarEnvio = (e) => {
+  const manejarEnvio = async (e) => {
     e.preventDefault();
     setMensaje("");
+    setCargando(true);
 
-    // Usuarios simulados
-    const usuarios = [
-      {
-        email: "admin@sape.com",
-        password: "admin123",
-        nombre: "Administrador",
-        rol: "administrador",
-      },
-      {
-        email: "empleado@sape.com",
-        password: "empleado123",
-        nombre: "Empleado de prueba",
-        rol: "empleado",
-      },
-    ];
+    try {
+      // Endpoint corregido a /api/login según tu backend
+      const response = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(datos),
+      });
 
-    // Buscamos si existe el usuario
-    const usuarioEncontrado = usuarios.find(
-      (usuario) =>
-        usuario.email === datos.email &&
-        usuario.password === datos.password
-    );
+      const data = await response.json();
 
-    // Si no coincide el correo o contraseña
-    if (!usuarioEncontrado) {
-      setMensaje("Correo electrónico o contraseña incorrectos.");
-      return;
-    }
+      if (!response.ok) {
+        throw new Error(data.mensaje || "Error al iniciar sesión.");
+      }
 
-    // Datos que guardaremos en Zustand
-    const userData = {
-      email: usuarioEncontrado.email,
-      nombre: usuarioEncontrado.nombre,
-      rol: usuarioEncontrado.rol,
-    };
+      // Tu backend devuelve { user: {...}, token: "..." }
+      const usuarioLogueado = data.user || data.usuario || data;
+      const tokenRecibido = data.token;
 
-    const token = "fake-jwt-token-123";
+      // Guardamos en Zustand
+      login(usuarioLogueado, tokenRecibido);
 
-    // Guardamos la sesión
-    login(userData, token);
+      // Verificamos el rol exacto para la redirección
+      const rolUsuario = usuarioLogueado.rol;
 
-    // Redirigimos según el rol
-    if (userData.rol === "administrador") {
-      navigate("/admin");
-    } else {
-      navigate("/dashboard");
+      if (rolUsuario === "administrador") {
+        navigate("/admin");
+      } else {
+        navigate("/empleado"); // Cambia por "/dashboard" si tu ruta del empleado se llama así
+      }
+
+    } catch (error) {
+      setMensaje(error.message || "Credenciales incorrectas o error de conexión.");
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -164,15 +156,16 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700"
+              disabled={cargando}
+              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700 disabled:opacity-50"
             >
-              Iniciar sesión <span aria-hidden="true">→</span>
+              {cargando ? "Iniciando sesión..." : "Iniciar sesión →"}
             </button>
 
             {mensaje && (
               <p
                 role="status"
-                className="rounded-lg bg-indigo-50 px-4 py-3 text-sm leading-5 text-indigo-800"
+                className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm leading-5 text-rose-700"
               >
                 {mensaje}
               </p>
