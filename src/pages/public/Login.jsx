@@ -90,7 +90,6 @@ const Login = () => {
             Volver al inicio
           </Link>
 
-          {/* Título */}
           <div className="mb-7 text-center">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
               Iniciar sesión
@@ -100,9 +99,7 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Formulario */}
           <form onSubmit={manejarEnvio} className="space-y-5">
-            {/* Email */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Correo electrónico
@@ -145,7 +142,6 @@ const Login = () => {
               </div>
             </label>
 
-            {/* Opciones */}
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
               <label className="flex items-center gap-2 text-slate-600">
                 <input
@@ -158,9 +154,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() =>
-                  setMensaje(
-                    "Contacta al administrador para recuperar tu acceso.",
-                  )
+                  setMensaje("Contacta al administrador para recuperar tu acceso.")
                 }
                 className="font-semibold text-indigo-600 hover:text-indigo-800"
               >
@@ -168,7 +162,6 @@ const Login = () => {
               </button>
             </div>
 
-            {/* Botón de ingreso */}
             <button
               type="submit"
               className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700"
@@ -176,7 +169,6 @@ const Login = () => {
               Iniciar sesión <span aria-hidden="true">→</span>
             </button>
 
-            {/* Mensaje */}
             {mensaje && (
               <p
                 role="status"
@@ -187,7 +179,6 @@ const Login = () => {
             )}
           </form>
 
-          {/* Enlace al registro */}
           <p className="mt-7 text-center text-sm text-slate-500">
             ¿Todavía no tienes cuenta?{" "}
             <Link

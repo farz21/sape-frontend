@@ -40,6 +40,7 @@ const Registro = () => {
 
   const manejarEnvio = (e) => {
     e.preventDefault();
+    setMensaje("");
 
     // Validación final por seguridad antes de enviar
     if (datos.password !== datos.confirmPassword) {
