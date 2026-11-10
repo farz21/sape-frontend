@@ -15,7 +15,7 @@ const DashboardEmpleado = () => {
   useEffect(() => {
     const cargarResumen = async () => {
       try {
-        const response = await fetch(`${API_URL}/empleado/dashboard`, {
+        const response = await fetch(`${API_URL}/api/empleados/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
