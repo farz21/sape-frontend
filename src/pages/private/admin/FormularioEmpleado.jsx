@@ -66,7 +66,7 @@ const FormularioEmpleado = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const guardarEmpleado = async (e) => {
+ const guardarEmpleado = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -102,7 +102,6 @@ const FormularioEmpleado = () => {
       setError("Error de conexión con el servidor.");
     }
   };
-
   if (cargando) return <div className="p-8 text-slate-500">Cargando formulario...</div>;
 
   return (
