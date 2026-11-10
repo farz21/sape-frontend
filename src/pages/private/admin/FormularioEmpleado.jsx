@@ -37,7 +37,7 @@ const FormularioEmpleado = () => {
             
             // Formatear la fecha para el input type="date" (YYYY-MM-DD)
             // Asumimos que si no hay fecha en el historial, devolvemos vacío
-            const fechaFormateada = emp.creado_en ? new Date(emp.creado_en).toISOString().split('T')[0] : '';
+            const fechaFormateada = emp.fecha_ingreso ? new Date(emp.fecha_ingreso).toISOString().split('T')[0] : '';
 
             setFormData({
               nombre: emp.nombre || '',
@@ -66,7 +66,7 @@ const FormularioEmpleado = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const guardarEmpleado = async (e) => {
+ const guardarEmpleado = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -76,6 +76,12 @@ const FormularioEmpleado = () => {
       
     const metodo = esModoEdicion ? 'PUT' : 'POST';
 
+    // ✨ EL CAMBIO ESTÁ AQUÍ: Clonamos y limpiamos el password al editar
+    const datosAEnviar = { ...formData };
+    if (esModoEdicion) {
+      delete datosAEnviar.password;
+    }
+
     try {
       const response = await fetch(url, {
         method: metodo,
@@ -83,7 +89,7 @@ const FormularioEmpleado = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(datosAEnviar) // Mandamos los datos limpios
       });
 
       if (response.ok) {
@@ -96,7 +102,6 @@ const FormularioEmpleado = () => {
       setError("Error de conexión con el servidor.");
     }
   };
-
   if (cargando) return <div className="p-8 text-slate-500">Cargando formulario...</div>;
 
   return (
