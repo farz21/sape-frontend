@@ -54,8 +54,8 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/empleado" element={<EmpleadoLayout />}>
             <Route index element={<DashboardEmpleado />} />
-            <Route path="evaluaciones" element={<EvaluacionesEmpleado />} />
-            <Route path="perfil" element={<PerfilEmpleado />} />
+            <Route path="/empleado/evaluaciones" element={<EvaluacionesEmpleado />} />
+            <Route path="/empleado/perfil" element={<PerfilEmpleado />} />
           </Route>
         </Route>
 
