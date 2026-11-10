@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Save, ArrowLeft, Building2, User, Mail, Key, Calendar, Briefcase } from 'lucide-react';
+import { Save, ArrowLeft, Building2, User, Mail, Key, Calendar, Briefcase, Eye, EyeOff } from 'lucide-react';
 
 const FormularioEmpleado = () => {
   const { id } = useParams(); // Si hay ID, estamos en modo Edición
@@ -11,6 +11,7 @@ const FormularioEmpleado = () => {
   const esModoEdicion = Boolean(id);
   const [cargando, setCargando] = useState(esModoEdicion);
   const [error, setError] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false); // Estado para el ojito del password
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -33,19 +34,17 @@ const FormularioEmpleado = () => {
           });
           if (response.ok) {
             const data = await response.json();
-            const emp = data.datos; // Tomás lo llamó "datos" en su endpoint
+            const emp = data.datos; 
             
-            // Formatear la fecha para el input type="date" (YYYY-MM-DD)
-            // Asumimos que si no hay fecha en el historial, devolvemos vacío
             const fechaFormateada = emp.fecha_ingreso ? new Date(emp.fecha_ingreso).toISOString().split('T')[0] : '';
 
             setFormData({
               nombre: emp.nombre || '',
               apellido: emp.apellido || '',
               email: emp.email || '',
-              password: '', // No mostramos la contraseña hasheada
+              password: '', 
               empresa: emp.empresa || 'S.A.P.E.',
-              legajo: emp.legajo || '', // Si no viene en este endpoint, quedará vacío para que lo llene
+              legajo: emp.legajo || '', 
               fecha_ingreso: fechaFormateada,
               id_puesto: 1
             });
@@ -66,7 +65,7 @@ const FormularioEmpleado = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
- const guardarEmpleado = async (e) => {
+  const guardarEmpleado = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -76,7 +75,6 @@ const FormularioEmpleado = () => {
       
     const metodo = esModoEdicion ? 'PUT' : 'POST';
 
-    // ✨ EL CAMBIO ESTÁ AQUÍ: Clonamos y limpiamos el password al editar
     const datosAEnviar = { ...formData };
     if (esModoEdicion) {
       delete datosAEnviar.password;
@@ -89,7 +87,7 @@ const FormularioEmpleado = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(datosAEnviar) // Mandamos los datos limpios
+        body: JSON.stringify(datosAEnviar)
       });
 
       if (response.ok) {
@@ -102,6 +100,7 @@ const FormularioEmpleado = () => {
       setError("Error de conexión con el servidor.");
     }
   };
+
   if (cargando) return <div className="p-8 text-slate-500">Cargando formulario...</div>;
 
   return (
@@ -167,17 +166,28 @@ const FormularioEmpleado = () => {
             </div>
           </div>
 
-          {/* Password (Solo Alta) */}
+          {/* Password (Solo Alta) con Botón de Visibilidad (Ojito) */}
           {!esModoEdicion && (
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Contraseña Temporal</label>
               <div className="relative">
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input 
-                  type="password" name="password" required value={formData.password} onChange={manejarCambio}
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                  type={mostrarPassword ? "text" : "password"} 
+                  name="password" 
+                  required 
+                  value={formData.password} 
+                  onChange={manejarCambio}
+                  className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                   placeholder="********"
                 />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword(!mostrarPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
           )}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react"; 
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"; 
 import { useAuthStore } from "../../store/useAuthStore"; 
 import HeaderPublic from "../../components/public/HeaderPublic";
 import FooterPublic from "../../components/public/FooterPublic";
@@ -22,39 +22,56 @@ const Login = () => {
     setMensaje("");
   };
 
-  const manejarEnvio = async (e) => {
+  const manejarEnvio = (e) => {
     e.preventDefault();
     setMensaje("");
 
-    try {
-      const response = await fetch("http://localhost:3000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: datos.email,
-          password: datos.password
-        }),
-      });
+    // Usuarios simulados
+    const usuarios = [
+      {
+        email: "admin@sape.com",
+        password: "admin123",
+        nombre: "Administrador",
+        rol: "administrador",
+      },
+      {
+        email: "empleado@sape.com",
+        password: "empleado123",
+        nombre: "Empleado de prueba",
+        rol: "empleado",
+      },
+    ];
 
-      const data = await response.json();
+    // Buscamos si existe el usuario
+    const usuarioEncontrado = usuarios.find(
+      (usuario) =>
+        usuario.email === datos.email &&
+        usuario.password === datos.password
+    );
 
-      if (!response.ok) {
-        setMensaje(data.mensaje || "Error al iniciar sesión.");
-        return;
-      }
+    // Si no coincide el correo o contraseña
+    if (!usuarioEncontrado) {
+      setMensaje("Correo electrónico o contraseña incorrectos.");
+      return;
+    }
 
-      // Guardamos la sesión en Zustand
-      login(data.user, data.token);
+    // Datos que guardaremos en Zustand
+    const userData = {
+      email: usuarioEncontrado.email,
+      nombre: usuarioEncontrado.nombre,
+      rol: usuarioEncontrado.rol,
+    };
 
-      // Redirigimos según el rol
-      if (data.user.rol === "administrador") {
-        navigate("/admin");
-      } else {
-        navigate("/empleado");
-      }
-    } catch (error) {
-      console.error("Error en la petición:", error);
-      setMensaje("No se pudo conectar con el servidor.");
+    const token = "fake-jwt-token-123";
+
+    // Guardamos la sesión
+    login(userData, token);
+
+    // Redirigimos según el rol
+    if (userData.rol === "administrador") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
     }
   };
 
@@ -99,11 +116,12 @@ const Login = () => {
               />
             </label>
 
+            {/* Contraseña con Ojito */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Contraseña
               </span>
-              <span className="relative block">
+              <div className="relative">
                 <input
                   type={mostrarPassword ? "text" : "password"}
                   name="password"
@@ -112,16 +130,16 @@ const Login = () => {
                   placeholder="Ingresa tu contraseña"
                   autoComplete="current-password"
                   required
-                  className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-20 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 />
                 <button
                   type="button"
                   onClick={() => setMostrarPassword(!mostrarPassword)}
-                  className="absolute inset-y-0 right-3 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                 >
-                  {mostrarPassword ? "Ocultar" : "Mostrar"}
+                  {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </span>
+              </div>
             </label>
 
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
