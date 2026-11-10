@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import HeaderPublic from "../../components/public/HeaderPublic";
 import FooterPublic from "../../components/public/FooterPublic";
@@ -15,10 +15,13 @@ const Registro = () => {
     email: "",
     empresa: "",
     password: "",
+    confirmPassword: "",
     aceptar: false,
   });
 
   const [mensaje, setMensaje] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState(false);
 
   const manejarCambio = (e) => {
     const { name, value, type, checked } = e.target;
@@ -31,8 +34,18 @@ const Registro = () => {
     setMensaje("");
   };
 
+  // Variable computada: valida en tiempo real si ambas contraseñas tienen texto y no coinciden
+  const lasContraseñasCoinciden = 
+    datos.password === "" || datos.confirmPassword === "" || datos.password === datos.confirmPassword;
+
   const manejarEnvio = (e) => {
     e.preventDefault();
+
+    // Validación final por seguridad antes de enviar
+    if (datos.password !== datos.confirmPassword) {
+      setMensaje("Las contraseñas no coinciden. Por favor, revísalas.");
+      return;
+    }
 
     // Simulamos la respuesta del backend
     const newUserData = { 
@@ -50,7 +63,6 @@ const Registro = () => {
     navigate('/dashboard');
   };
 
-  // ¡Acá están las variables que faltaban!
   const claseInput =
     "mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
 
@@ -143,22 +155,69 @@ const Registro = () => {
               />
             </label>
 
+            {/* Contraseña con Ojito */}
             <label className={claseLabel}>
               Contraseña
-              <input
-                className={claseInput}
-                type="password"
-                name="password"
-                value={datos.password}
-                onChange={manejarCambio}
-                placeholder="Mínimo 8 caracteres"
-                autoComplete="new-password"
-                minLength={8}
-                required
-              />
+              <div className="relative mt-1.5">
+                <input
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  type={mostrarPassword ? "text" : "password"}
+                  name="password"
+                  value={datos.password}
+                  onChange={manejarCambio}
+                  placeholder="Mínimo 8 caracteres"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword(!mostrarPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </label>
 
-            <label className="flex items-start gap-2.5 text-xs leading-5 text-slate-500">
+            {/* Confirmar Contraseña con Validación en Vivo */}
+            <label className={claseLabel}>
+              <div className="flex justify-between items-center">
+                <span>Confirmar contraseña</span>
+                {/* Texto chiquitito de advertencia en rojo si no coinciden */}
+                {!lasContraseñasCoinciden && (
+                  <span className="text-xs font-medium text-rose-600 animate-pulse">
+                    Las contraseñas no coinciden
+                  </span>
+                )}
+              </div>
+              <div className="relative mt-1.5">
+                <input
+                  className={`block w-full rounded-lg border bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 ${
+                    !lasContraseñasCoinciden
+                      ? "border-rose-500 ring-2 ring-rose-100 focus:border-rose-500 focus:ring-rose-200"
+                      : "border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  }`}
+                  type={mostrarConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={datos.confirmPassword}
+                  onChange={manejarCambio}
+                  placeholder="Repite tu contraseña"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarConfirmPassword(!mostrarConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {mostrarConfirmPassword ? <EyeOff size={18} /> : <Eye size= {18} />}
+                </button>
+              </div>
+            </label>
+
+            <label className="flex items-start gap-2.5 text-xs leading-5 text-slate-500 pt-1">
               <input
                 type="checkbox"
                 name="aceptar"
@@ -174,7 +233,12 @@ const Registro = () => {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 transition hover:-translate-y-0.5 hover:bg-indigo-700"
+              disabled={!lasContraseñasCoinciden && datos.confirmPassword !== ""}
+              className={`w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-md transition ${
+                !lasContraseñasCoinciden && datos.confirmPassword !== ""
+                  ? "bg-rose-400 cursor-not-allowed"
+                  : "bg-indigo-600 shadow-indigo-100 hover:-translate-y-0.5 hover:bg-indigo-700"
+              }`}
             >
               Crear cuenta <span aria-hidden="true">→</span>
             </button>

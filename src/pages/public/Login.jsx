@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react"; 
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"; 
 import { useAuthStore } from "../../store/useAuthStore"; 
 import HeaderPublic from "../../components/public/HeaderPublic";
 import FooterPublic from "../../components/public/FooterPublic";
@@ -23,57 +23,57 @@ const Login = () => {
   };
 
   const manejarEnvio = (e) => {
-  e.preventDefault();
-  setMensaje("");
+    e.preventDefault();
+    setMensaje("");
 
-  // Usuarios simulados
-  const usuarios = [
-    {
-      email: "admin@sape.com",
-      password: "admin123",
-      nombre: "Administrador",
-      rol: "administrador",
-    },
-    {
-      email: "empleado@sape.com",
-      password: "empleado123",
-      nombre: "Empleado de prueba",
-      rol: "empleado",
-    },
-  ];
+    // Usuarios simulados
+    const usuarios = [
+      {
+        email: "admin@sape.com",
+        password: "admin123",
+        nombre: "Administrador",
+        rol: "administrador",
+      },
+      {
+        email: "empleado@sape.com",
+        password: "empleado123",
+        nombre: "Empleado de prueba",
+        rol: "empleado",
+      },
+    ];
 
-  // Buscamos si existe el usuario
-  const usuarioEncontrado = usuarios.find(
-    (usuario) =>
-      usuario.email === datos.email &&
-      usuario.password === datos.password
-  );
+    // Buscamos si existe el usuario
+    const usuarioEncontrado = usuarios.find(
+      (usuario) =>
+        usuario.email === datos.email &&
+        usuario.password === datos.password
+    );
 
-  // Si no coincide el correo o contraseña
-  if (!usuarioEncontrado) {
-    setMensaje("Correo electrónico o contraseña incorrectos.");
-    return;
-  }
+    // Si no coincide el correo o contraseña
+    if (!usuarioEncontrado) {
+      setMensaje("Correo electrónico o contraseña incorrectos.");
+      return;
+    }
 
-  // Datos que guardaremos en Zustand
-  const userData = {
-    email: usuarioEncontrado.email,
-    nombre: usuarioEncontrado.nombre,
-    rol: usuarioEncontrado.rol,
+    // Datos que guardaremos en Zustand
+    const userData = {
+      email: usuarioEncontrado.email,
+      nombre: usuarioEncontrado.nombre,
+      rol: usuarioEncontrado.rol,
+    };
+
+    const token = "fake-jwt-token-123";
+
+    // Guardamos la sesión
+    login(userData, token);
+
+    // Redirigimos según el rol
+    if (userData.rol === "administrador") {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
   };
-
-  const token = "fake-jwt-token-123";
-
-  // Guardamos la sesión
-  login(userData, token);
-
-  // Redirigimos según el rol
-  if (userData.rol === "administrador") {
-    navigate("/admin");
-  } else {
-    navigate("/dashboard");
-  }
-};
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50">
@@ -86,7 +86,6 @@ const Login = () => {
             aria-label="Volver al inicio"
             className="inline-flex items-center gap-2 mb-6 text-sm font-medium transition text-slate-500 hover:text-indigo-600"
           >
-            {/* Ícono de Lucide reemplazando al texto */}
             <ArrowLeft className="w-5 h-5" />
             Volver al inicio
           </Link>
@@ -96,7 +95,6 @@ const Login = () => {
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
               Iniciar sesión
             </h1>
-
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Ingresa tus datos para acceder a tu espacio de trabajo.
             </p>
@@ -109,7 +107,6 @@ const Login = () => {
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Correo electrónico
               </span>
-
               <input
                 type="email"
                 name="email"
@@ -122,13 +119,12 @@ const Login = () => {
               />
             </label>
 
-            {/* Contraseña */}
+            {/* Contraseña con Ojito */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
                 Contraseña
               </span>
-
-              <span className="relative block">
+              <div className="relative">
                 <input
                   type={mostrarPassword ? "text" : "password"}
                   name="password"
@@ -137,17 +133,16 @@ const Login = () => {
                   placeholder="Ingresa tu contraseña"
                   autoComplete="current-password"
                   required
-                  className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-20 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                 />
-
                 <button
                   type="button"
                   onClick={() => setMostrarPassword(!mostrarPassword)}
-                  className="absolute inset-y-0 right-3 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
                 >
-                  {mostrarPassword ? "Ocultar" : "Mostrar"}
+                  {mostrarPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </span>
+              </div>
             </label>
 
             {/* Opciones */}
@@ -205,7 +200,6 @@ const Login = () => {
         </div>
       </main>
 
-      {/* Footer al pie de la página */}
       <FooterPublic />
     </div>
   );

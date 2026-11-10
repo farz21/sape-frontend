@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useAuthStore } from "../../../../store/useAuthStore";
-import { ArrowLeft, User, Briefcase, Mail, PlusCircle } from "lucide-react";
+import { useAuthStore } from "../../../store/useAuthStore";
+import { ArrowLeft, User, Briefcase, Mail, PlusCircle, Trash2, Calendar, Award } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -46,6 +46,28 @@ const Empleado = () => {
     cargarDatos();
   }, [id, token]);
 
+  const eliminarEvaluacion = async (idEvaluacion) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta evaluación?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/evaluaciones/${idEvaluacion}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        // Filtramos el estado local para que desaparezca del gráfico y de la lista al instante
+        setEvaluaciones(prev => prev.filter(ev => ev.id_evaluacion !== idEvaluacion));
+      } else {
+        const data = await response.json();
+        alert(data.mensaje || "No se pudo eliminar la evaluación.");
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      alert("Error al conectar con el servidor.");
+    }
+  };
+
   if (cargando)
     return (
       <div className="p-8 text-slate-500 font-medium">
@@ -60,7 +82,7 @@ const Empleado = () => {
     );
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-12">
       {/* Encabezado y Navegación */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
@@ -132,67 +154,128 @@ const Empleado = () => {
           </div>
         </div>
 
-        {/* Panel del Gráfico de Evolución */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-slate-800 mb-2">
-            Evolución de Desempeño
-          </h2>
-          <p className="text-sm text-slate-500 mb-6">
-            Puntaje final obtenido en las evaluaciones históricas.
-          </p>
+        {/* Panel del Gráfico de Evolución y Lista de Evaluaciones */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-2">
+              Evolución de Desempeño
+            </h2>
+            <p className="text-sm text-slate-500 mb-6">
+              Puntaje final obtenido en las evaluaciones históricas.
+            </p>
 
-          <div className="h-72 w-full">
+            <div className="h-72 w-full">
+              {evaluaciones.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={evaluaciones}
+                    margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#e2e8f0"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="periodo"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
+                      formatter={(value) => [`${value} Pts`, "Puntaje"]}
+                      labelStyle={{ fontWeight: "bold", color: "#334155" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="puntaje_final"
+                      stroke="#2563eb"
+                      strokeWidth={3}
+                      dot={{
+                        r: 4,
+                        fill: "#2563eb",
+                        strokeWidth: 2,
+                        stroke: "#fff",
+                      }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 font-medium">
+                  Este empleado aún no tiene evaluaciones registradas.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Listado Detallado de Evaluaciones con el Botón de Eliminar */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="font-semibold text-slate-800">Historial de Evaluaciones</h3>
+            </div>
+
             {evaluaciones.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={evaluaciones}
-                  margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#e2e8f0"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="periodo"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                    dy={10}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "8px",
-                      border: "none",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
-                    formatter={(value) => [`${value} Pts`, "Puntaje"]}
-                    labelStyle={{ fontWeight: "bold", color: "#334155" }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="puntaje_final"
-                    stroke="#2563eb"
-                    strokeWidth={3}
-                    dot={{
-                      r: 4,
-                      fill: "#2563eb",
-                      strokeWidth: 2,
-                      stroke: "#fff",
-                    }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <ul className="divide-y divide-slate-200">
+                {/* Nota: si prefieres ver la lista con el orden original de la base de datos, puedes usar [.reverse()] de nuevo o mapearlas tal cual */}
+                {[...evaluaciones].reverse().map((ev) => (
+                  <li key={ev.id_evaluacion} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1 text-blue-600">
+                        <Award size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                          Periodo: {ev.periodo}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                          <Calendar size={13} />
+                          Fecha: {new Date(ev.fecha).toLocaleDateString("es-AR")}
+                        </p>
+                        <span className={`inline-block mt-2 text-xs font-bold px-2 py-0.5 rounded text-white ${
+                          ev.semaforo === 'Verde' ? 'bg-emerald-600' :
+                          ev.semaforo === 'Amarillo' ? 'bg-amber-500' : 'bg-rose-600'
+                        }`}>
+                          {ev.semaforo}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <span className="text-base font-bold text-slate-800">
+                          {ev.puntaje_final}
+                        </span>
+                        <span className="text-xs text-slate-500 block">Pts</span>
+                      </div>
+
+                      {/* Botón de Eliminar Evaluación */}
+                      <button
+                        onClick={() => eliminarEvaluacion(ev.id_evaluacion)}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        title="Eliminar evaluación"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 font-medium">
-                Este empleado aún no tiene evaluaciones registradas.
+              <div className="p-6 text-center text-sm text-slate-400">
+                No hay registros para mostrar.
               </div>
             )}
           </div>
