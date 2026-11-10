@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Páginas públicas
@@ -12,15 +11,17 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
 
 // Empleado
-import EmpleadoLayout from "./components/private/EmpleadoLayout";
-import DashboardEmpleado from "./pages/private/DashboardEmpleado";
-import EvaluacionesEmpleado from "./pages/private/EvaluacionesEmpleado";
+import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
+import DashboardEmpleado from "./pages/private/empleado/DashboardEmpleado";
+import EvaluacionesEmpleado from "./pages/private/empleado/EvaluacionesEmpleado";
+import PerfilEmpleado from "./pages/private/empleado/PerfilEmpleado";
 
 // Administrador
 import AdminLayout from "./pages/private/admin/AdminLayout";
 import Dashboard from "./pages/private/admin/Dashboard";
 import Empleados from "./pages/private/admin/Empleados";
 import Empleado from "./pages/private/admin/Empleado";
+import FormularioEmpleado from "./pages/private/admin/FormularioEmpleado";
 
 function App() {
   return (
@@ -36,15 +37,21 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="empleados" element={<Empleados />} />
+            <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
+            <Route
+              path="empleados/editar/:id"
+              element={<FormularioEmpleado />}
+            />
             <Route path="empleados/:id" element={<Empleado />} />
           </Route>
         </Route>
 
         {/* RUTAS DEL EMPLEADO */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<EmpleadoLayout />}>
-            <Route path="/dashboard" element={<DashboardEmpleado />} />
-            <Route path="/evaluaciones" element={<EvaluacionesEmpleado />} />
+          <Route path="/empleado" element={<EmpleadoLayout />}>
+            <Route index element={<DashboardEmpleado />} />
+            <Route path="evaluaciones" element={<EvaluacionesEmpleado />} />
+            <Route path="perfil" element={<PerfilEmpleado />} />
           </Route>
         </Route>
 
