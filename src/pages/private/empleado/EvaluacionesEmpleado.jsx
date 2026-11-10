@@ -13,7 +13,7 @@ const EvaluacionesEmpleado = () => {
   useEffect(() => {
     const cargarEvaluaciones = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/empleados/dashboard`, {
+        const response = await fetch(`${API_URL}/api/empleado/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
