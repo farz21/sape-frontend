@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Páginas públicas
@@ -12,9 +11,9 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
 
 // Empleado
-import EmpleadoLayout from "./components/private/EmpleadoLayout";
-import DashboardEmpleado from "./pages/private/DashboardEmpleado";
-import EvaluacionesEmpleado from "./pages/private/EvaluacionesEmpleado";
+import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
+import DashboardEmpleado from "./pages/private/empleado/DashboardEmpleado";
+import EvaluacionesEmpleado from "./pages/private/empleado/EvaluacionesEmpleado";
 
 // Administrador
 import AdminLayout from "./pages/private/admin/AdminLayout";
@@ -42,9 +41,9 @@ function App() {
 
         {/* RUTAS DEL EMPLEADO */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<EmpleadoLayout />}>
-            <Route path="/dashboard" element={<DashboardEmpleado />} />
-            <Route path="/evaluaciones" element={<EvaluacionesEmpleado />} />
+          <Route path="/empleado" element={<EmpleadoLayout />}>
+            <Route index element={<DashboardEmpleado />} />
+            <Route path="evaluaciones" element={<EvaluacionesEmpleado />} />
           </Route>
         </Route>
 
