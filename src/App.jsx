@@ -9,7 +9,7 @@ import Registro from "./pages/public/Registro";
 
 // Seguridad
 import ProtectedRoute from "./routes/ProtectedRoute";
-import AdminPrivateRoutes from "./routes/AdminPivateRoutes";
+import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
 
 // Empleado
 import EmpleadoLayout from "./components/private/EmpleadoLayout";
