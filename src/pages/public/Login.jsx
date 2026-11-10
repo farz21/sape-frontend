@@ -50,7 +50,7 @@ const Login = () => {
       if (data.user.rol === "administrador") {
         navigate("/admin");
       } else {
-        navigate("/dashboard");
+        navigate("/empleado");
       }
     } catch (error) {
       console.error("Error en la petición:", error);
