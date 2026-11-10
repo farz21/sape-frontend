@@ -23,6 +23,7 @@ import Dashboard from "./pages/private/admin/Dashboard";
 import Empleados from "./pages/private/admin/Empleados";
 import Empleado from "./pages/private/admin/Empleado";
 import FormularioEmpleado from "./pages/private/admin/FormularioEmpleado";
+import FormularioEvaluacion from "./pages/private/admin/FormularioEvaluacion";
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
             <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
             <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
             <Route path="empleados/:id" element={<Empleado />} />
+            <Route path="empleados/:id/evaluar" element={<FormularioEvaluacion />} />
           </Route>
         </Route>
 
