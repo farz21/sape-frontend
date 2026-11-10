@@ -21,6 +21,7 @@ import AdminLayout from "./pages/private/admin/AdminLayout";
 import Dashboard from "./pages/private/admin/Dashboard";
 import Empleados from "./pages/private/admin/Empleados";
 import Empleado from "./pages/private/admin/Empleado";
+import FormularioEmpleado from "./pages/private/admin/FormularioEmpleado";
 
 function App() {
   return (
@@ -36,6 +37,11 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="empleados" element={<Empleados />} />
+            <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
+            <Route
+              path="empleados/editar/:id"
+              element={<FormularioEmpleado />}
+            />
             <Route path="empleados/:id" element={<Empleado />} />
           </Route>
         </Route>
