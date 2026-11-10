@@ -14,6 +14,7 @@ import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
 import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
 import DashboardEmpleado from "./pages/private/empleado/DashboardEmpleado";
 import EvaluacionesEmpleado from "./pages/private/empleado/EvaluacionesEmpleado";
+import PerfilEmpleado from "./pages/private/empleado/PerfilEmpleado";
 
 // Administrador
 import AdminLayout from "./pages/private/admin/AdminLayout";
@@ -44,6 +45,7 @@ function App() {
           <Route path="/empleado" element={<EmpleadoLayout />}>
             <Route index element={<DashboardEmpleado />} />
             <Route path="evaluaciones" element={<EvaluacionesEmpleado />} />
+            <Route path="perfil" element={<PerfilEmpleado />} />
           </Route>
         </Route>
 
