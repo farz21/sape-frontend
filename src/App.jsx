@@ -24,6 +24,7 @@ import Empleados from "./pages/private/admin/Empleados";
 import Empleado from "./pages/private/admin/Empleado";
 import FormularioEmpleado from "./pages/private/admin/FormularioEmpleado";
 import FormularioEvaluacion from "./pages/private/admin/FormularioEvaluacion";
+import ComparacionEmpleados from "./pages/private/admin/ComparacionEmpleados";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
             <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
             <Route path="empleados/:id" element={<Empleado />} />
             <Route path="empleados/:id/evaluar" element={<FormularioEvaluacion />} />
+            <Route path="empleados/comparar" element={<ComparacionEmpleados />} />
           </Route>
         </Route>
 

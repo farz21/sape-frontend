@@ -27,6 +27,7 @@ const AdminLayout = () => {
           <nav className="space-y-2">
             <NavLink to="/admin" end className={claseEnlace}><LayoutDashboard size={19} />Dashboard</NavLink>
             <NavLink to="/admin/empleados" end className={claseEnlace}><Users size={19} />Todos los empleados</NavLink>
+            <NavLink to="/admin/empleados/comparar" end className={claseEnlace}><Users size={19} />Comparacion de empleados</NavLink>
           </nav>
           <div className="mt-auto border-t border-slate-800 pt-5">
             <div className="mb-4 flex items-center gap-3 rounded-xl bg-slate-900 p-3">
