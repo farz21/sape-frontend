@@ -1,88 +1,26 @@
 
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
-  Legend,
-  AreaChart,
-  Area,
 } from "recharts";
 
-// ==========================================
-// DATOS HARDCODEADOS
-// ==========================================
-
-const empleados = [
-  {
-    id: 1,
-    nombre: "María González",
-    iniciales: "MG",
-    puesto: "Desarrolladora",
-    departamento: "Tecnología",
-    antiguedad: "2 años",
-    rendimiento: 92,
-    productividad: 95,
-    cumplimiento: 90,
-    puntualidad: 88,
-    evaluaciones: 94,
-    asistencia: 96,
-    tareasCompletadas: 48,
-    tareasPendientes: 3,
-    color: "#3B82F6",
-  },
-  {
-    id: 2,
-    nombre: "Juan Pérez",
-    iniciales: "JP",
-    puesto: "Analista",
-    departamento: "Tecnología",
-    antiguedad: "1 año",
-    rendimiento: 84,
-    productividad: 82,
-    cumplimiento: 88,
-    puntualidad: 94,
-    evaluaciones: 79,
-    asistencia: 98,
-    tareasCompletadas: 41,
-    tareasPendientes: 7,
-    color: "#8B5CF6",
-  },
-];
-
-const evolucion = [
-  { mes: "Jun", maria: 78, juan: 75 },
-  { mes: "Jul", maria: 82, juan: 79 },
-  { mes: "Ago", maria: 85, juan: 80 },
-  { mes: "Sep", maria: 87, juan: 83 },
-  { mes: "Oct", maria: 90, juan: 82 },
-  { mes: "Nov", maria: 92, juan: 84 },
-];
-
-const indicadores = [
-  { nombre: "Productividad", maria: 95, juan: 82 },
-  { nombre: "Cumplimiento", maria: 90, juan: 88 },
-  { nombre: "Puntualidad", maria: 88, juan: 94 },
-  { nombre: "Evaluaciones", maria: 94, juan: 79 },
-  { nombre: "Asistencia", maria: 96, juan: 98 },
-];
-
-const colores = ["#3B82F6", "#8B5CF6"];
+import { useAuthStore } from "../../../store/useAuthStore";
 
 // ==========================================
-// COMPONENTE: GRÁFICO DE DONA
+// COMPONENTES DE GRÁFICOS
 // ==========================================
 
 function GraficoDona({ valor, color, titulo }) {
+  const porcentaje = Math.max(0, Math.min(100, Number(valor) || 0));
+
   const datos = [
-    { name: "Completado", value: valor },
-    { name: "Restante", value: 100 - valor },
+    { name: "Completado", value: porcentaje },
+    { name: "Restante", value: 100 - porcentaje },
   ];
 
   return (
@@ -105,11 +43,12 @@ function GraficoDona({ valor, color, titulo }) {
             >
               {datos.map((entry, index) => (
                 <Cell
-                  key={index}
+                  key={entry.name}
                   fill={index === 0 ? color : "#E5E7EB"}
                 />
               ))}
             </Pie>
+
             <Tooltip
               formatter={(value) => [`${value}%`, "Porcentaje"]}
             />
@@ -118,11 +57,10 @@ function GraficoDona({ valor, color, titulo }) {
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold text-gray-900">
-            {valor}%
+            {porcentaje}%
           </span>
-          <span className="text-xs text-gray-400">
-            {titulo}
-          </span>
+
+          <span className="text-xs text-gray-400">{titulo}</span>
         </div>
       </div>
     </div>
@@ -130,13 +68,12 @@ function GraficoDona({ valor, color, titulo }) {
 }
 
 // ==========================================
-// COMPONENTE: TARJETA DE EMPLEADO
+// TARJETA DE EMPLEADO
 // ==========================================
 
 function TarjetaEmpleado({ empleado }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
       <div className="flex items-center gap-4">
         <div
           className="flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-bold text-white"
@@ -149,18 +86,20 @@ function TarjetaEmpleado({ empleado }) {
           <h3 className="font-bold text-gray-900">
             {empleado.nombre}
           </h3>
+
           <p className="text-sm text-gray-500">
-            {empleado.puesto}
+            {empleado.puesto || "Sin puesto asignado"}
           </p>
+
           <p className="text-xs text-gray-400">
-            {empleado.departamento} · {empleado.antiguedad}
+            Ingreso: {empleado.fecha_ingreso}
           </p>
         </div>
       </div>
 
       <div className="mt-5 border-t border-gray-100 pt-4">
         <p className="text-center text-sm font-medium text-gray-500">
-          Rendimiento general
+          Rendimiento Histórico
         </p>
 
         <GraficoDona
@@ -169,42 +108,6 @@ function TarjetaEmpleado({ empleado }) {
           titulo="Rendimiento"
         />
       </div>
-
-      <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
-        <div>
-          <p className="text-xs text-gray-400">Tareas completadas</p>
-          <p className="text-xl font-bold text-gray-900">
-            {empleado.tareasCompletadas}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-400">Tareas pendientes</p>
-          <p className="text-xl font-bold text-gray-900">
-            {empleado.tareasPendientes}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// COMPONENTE: INDICADOR ESTADÍSTICO
-// ==========================================
-
-function Indicador({ titulo, valor, descripcion }) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-gray-500">{titulo}</p>
-
-      <h3 className="mt-2 text-3xl font-bold text-gray-900">
-        {valor}
-      </h3>
-
-      <p className="mt-1 text-xs text-gray-400">
-        {descripcion}
-      </p>
     </div>
   );
 }
@@ -214,347 +117,618 @@ function Indicador({ titulo, valor, descripcion }) {
 // ==========================================
 
 export default function ComparacionEmpleados() {
-  const maria = empleados[0];
-  const juan = empleados[1];
+  const token = useAuthStore((state) => state.token);
 
-  const ganador =
-    maria.rendimiento > juan.rendimiento ? maria : juan;
+  const [empleadosLista, setEmpleadosLista] = useState([]);
+  const [idEmpA, setIdEmpA] = useState("");
+  const [idEmpB, setIdEmpB] = useState("");
 
-  const diferencia = Math.abs(
-    maria.rendimiento - juan.rendimiento
-  );
+  const [loading, setLoading] = useState(false);
+  const [resultado, setResultado] = useState(null);
+  const [error, setError] = useState("");
 
-  const totalTareas =
-    maria.tareasCompletadas +
-    juan.tareasCompletadas;
+  // ==========================================
+  // ANÁLISIS ESTRUCTURADO DE LA IA
+  // ==========================================
 
-  const promedioAsistencia = Math.round(
-    (maria.asistencia + juan.asistencia) / 2
-  );
+  const analisisIA =
+    resultado?.veredicto_ia &&
+    typeof resultado.veredicto_ia === "object"
+      ? resultado.veredicto_ia
+      : null;
 
-  const datosTareas = [
-    {
-      nombre: maria.nombre,
-      completadas: maria.tareasCompletadas,
-      pendientes: maria.tareasPendientes,
-      color: maria.color,
-    },
-    {
-      nombre: juan.nombre,
-      completadas: juan.tareasCompletadas,
-      pendientes: juan.tareasPendientes,
-      color: juan.color,
-    },
-  ];
+  // Evita errores si algún array no viene informado
+  const fortalezasA = analisisIA?.fortalezas_a || [];
+  const fortalezasB = analisisIA?.fortalezas_b || [];
+  const mejorasA = analisisIA?.mejoras_a || [];
+  const mejorasB = analisisIA?.mejoras_b || [];
+  const factoresComparados = analisisIA?.factores_comparados || [];
+  const recomendaciones = analisisIA?.recomendaciones || [];
+
+  // ==========================================
+  // CARGAR EMPLEADOS
+  // ==========================================
+
+  useEffect(() => {
+    const fetchEmpleados = async () => {
+      if (!token) {
+        setEmpleadosLista([]);
+        return;
+      }
+
+      try {
+        setError("");
+
+        const res = await axios.get(
+          "http://localhost:3000/api/empleados",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Admite distintas estructuras de respuesta
+        const lista = Array.isArray(res.data)
+          ? res.data
+          : res.data.empleados || res.data.data || [];
+
+        if (!Array.isArray(lista)) {
+          throw new Error(
+            "El servidor no devolvió una lista válida."
+          );
+        }
+
+        setEmpleadosLista(lista);
+      } catch (err) {
+        console.error(
+          "Error cargando empleados:",
+          err.response?.data || err
+        );
+
+        setError(
+          err.response?.data?.mensaje ||
+            "Error al cargar la lista de empleados. Verifica tu sesión."
+        );
+      }
+    };
+
+    fetchEmpleados();
+  }, [token]);
+
+  // ==========================================
+  // CALCULAR RENDIMIENTO
+  // ==========================================
+
+  const calcularRendimiento = (evaluaciones) => {
+    if (!Array.isArray(evaluaciones) || evaluaciones.length === 0) {
+      return 0;
+    }
+
+    const suma = evaluaciones.reduce(
+      (acc, ev) => acc + (Number(ev.puntaje_final) || 0),
+      0
+    );
+
+    const promedio = suma / evaluaciones.length;
+
+    return Math.max(
+      0,
+      Math.min(100, Math.round(promedio * 10))
+    );
+  };
+
+  // ==========================================
+  // FORMATEAR FECHAS
+  // ==========================================
+
+  const formatearFecha = (fecha) => {
+    if (!fecha) return "Sin información";
+
+    const date = new Date(fecha);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Sin información";
+    }
+
+    return date.toLocaleDateString("es-AR");
+  };
+
+  // ==========================================
+  // GENERAR DUELO
+  // ==========================================
+
+  const generarDuelo = async () => {
+    if (!idEmpA || !idEmpB) {
+      setError("Debes seleccionar dos empleados.");
+      return;
+    }
+
+    if (Number(idEmpA) === Number(idEmpB)) {
+      setError("No puedes comparar al mismo empleado.");
+      return;
+    }
+
+    if (!token) {
+      setError("No se encontró el token de autenticación.");
+      return;
+    }
+
+    const datosDuelo = {
+      id_empleado_a: Number(idEmpA),
+      id_empleado_b: Number(idEmpB),
+    };
+
+    console.log("IDs seleccionados:", idEmpA, idEmpB);
+    console.log("Datos enviados al backend:", datosDuelo);
+
+    setLoading(true);
+    setError("");
+    setResultado(null);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/admin/duelos/comparar",
+        datosDuelo,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Respuesta del duelo:", response.data);
+      console.log(
+        "Análisis IA:",
+        response.data.veredicto_ia,
+        typeof response.data.veredicto_ia
+      );
+
+      setResultado(response.data);
+    } catch (err) {
+      console.error("Error al generar el duelo:", err);
+      console.error(
+        "Respuesta del servidor:",
+        err.response?.data
+      );
+
+      setError(
+        err.response?.data?.mensaje ||
+          "Error al conectar con el servidor."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // RENDERIZADO
+  // ==========================================
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      {/* ENCABEZADO Y CONTROLES */}
 
-      {/* ENCABEZADO */}
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-            SAPE / People Analytics
-          </p>
-
-          <h1 className="mt-2 text-3xl font-bold text-gray-900">
-            Duelo de empleados
-          </h1>
-
-          <p className="mt-2 text-sm text-gray-500">
-            Comparación de rendimiento y estadísticas de empleados.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-          <p className="text-xs text-gray-400">Período analizado</p>
-          <p className="font-semibold text-gray-700">
-            Últimos 6 meses
-          </p>
-        </div>
-      </div>
-
-      {/* EMPLEADOS */}
-      <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-
-        <TarjetaEmpleado empleado={maria} />
-
-        <TarjetaEmpleado empleado={juan} />
-
-      </div>
-
-      {/* INDICADORES GENERALES */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-        <Indicador
-          titulo="Diferencia de rendimiento"
-          valor={`${diferencia} pp`}
-          descripcion="Diferencia entre empleados"
-        />
-
-        <Indicador
-          titulo="Tareas completadas"
-          valor={totalTareas}
-          descripcion="Total de ambos empleados"
-        />
-
-        <Indicador
-          titulo="Promedio de asistencia"
-          valor={`${promedioAsistencia}%`}
-          descripcion="Asistencia de ambos empleados"
-        />
-
-        <Indicador
-          titulo="Tareas pendientes"
-          valor={maria.tareasPendientes + juan.tareasPendientes}
-          descripcion="Total de tareas pendientes"
-        />
-
-      </div>
-
-      {/* COMPARACIÓN DE INDICADORES */}
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Duelo de Empleados (IA)
+        </h1>
 
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900">
-            Comparación de indicadores
-          </h2>
+        <p className="mt-2 mb-6 text-sm text-gray-500">
+          Selecciona dos perfiles para generar un análisis comparativo
+          estratégico impulsado por IA.
+        </p>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Rendimiento individual en cada área evaluada.
-          </p>
-        </div>
+        <div className="flex flex-col items-end gap-4 md:flex-row">
+          {/* CANDIDATO A */}
 
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={indicadores}
-              layout="vertical"
-              margin={{ left: 15, right: 20 }}
-              barGap={5}
+          <div className="flex-1 w-full">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Candidato A
+            </label>
+
+            <select
+              value={idEmpA}
+              onChange={(e) => {
+                setIdEmpA(e.target.value);
+                setResultado(null);
+                setError("");
+              }}
             >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={false}
-              />
+              <option value="">
+                Seleccione un empleado...
+              </option>
 
-              <XAxis
-                type="number"
-                domain={[0, 100]}
-                tick={{ fontSize: 12 }}
-              />
+              {empleadosLista.map((emp) => (
+                <option
+                  key={emp.id_empleado}
+                  value={emp.id_empleado}
+                >
+                  {emp.nombre} {emp.apellido}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <YAxis
-                type="category"
-                dataKey="nombre"
-                width={105}
-                tick={{ fontSize: 11 }}
-              />
+          {/* CANDIDATO B */}
 
-              <Tooltip
-                formatter={(value) => [`${value}%`, ""]}
-              />
+          <div className="flex-1 w-full">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Candidato B
+            </label>
 
-              <Legend />
+            <select
+              value={idEmpB}
+              onChange={(e) => {
+                setIdEmpB(e.target.value);
+                setResultado(null);
+                setError("");
+              }}
+            >
+              <option value="">
+                Seleccione un empleado...
+              </option>
 
-              <Bar
-                dataKey="maria"
-                name="María González"
-                fill="#3B82F6"
-                radius={[0, 5, 5, 0]}
-                barSize={13}
-              />
+              {empleadosLista.map((emp) => (
+                <option
+                  key={emp.id_empleado}
+                  value={emp.id_empleado}
+                >
+                  {emp.nombre} {emp.apellido}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              <Bar
-                dataKey="juan"
-                name="Juan Pérez"
-                fill="#8B5CF6"
-                radius={[0, 5, 5, 0]}
-                barSize={13}
-              />
+          {/* BOTÓN */}
 
-            </BarChart>
-          </ResponsiveContainer>
+          <button
+            onClick={generarDuelo}
+            disabled={loading || !token}
+            className="h-10 rounded-lg bg-blue-600 px-6 py-2 font-bold text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400"
+          >
+            {loading ? "Analizando..." : "Generar Duelo"}
+          </button>
         </div>
+
+        {/* MENSAJE DE ERROR */}
+
+        {error && (
+          <p className="mt-3 text-sm font-semibold text-red-500">
+            {error}
+          </p>
+        )}
       </div>
 
-      {/* EVOLUCIÓN DEL RENDIMIENTO */}
-      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      {/* SPINNER DE CARGA */}
 
-        <h2 className="text-lg font-bold text-gray-900">
-          Evolución del rendimiento
-        </h2>
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="mb-4 h-16 w-16 animate-spin rounded-full border-t-4 border-blue-600"></div>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Evolución mensual de los dos empleados.
-        </p>
+          <p className="animate-pulse font-medium text-gray-600">
+            La IA está analizando los perfiles y evaluaciones...
+          </p>
 
-        <div className="mt-6 h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={evolucion}>
-
-              <defs>
-                <linearGradient id="colorMaria" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                </linearGradient>
-
-                <linearGradient id="colorJuan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
-              <XAxis dataKey="mes" />
-
-              <YAxis domain={[0, 100]} />
-
-              <Tooltip />
-
-              <Legend />
-
-              <Area
-                type="monotone"
-                dataKey="maria"
-                name="María González"
-                stroke="#3B82F6"
-                fill="url(#colorMaria)"
-                strokeWidth={3}
-              />
-
-              <Area
-                type="monotone"
-                dataKey="juan"
-                name="Juan Pérez"
-                stroke="#8B5CF6"
-                fill="url(#colorJuan)"
-                strokeWidth={3}
-              />
-
-            </AreaChart>
-          </ResponsiveContainer>
+          <p className="mt-2 text-sm text-gray-400">
+            Esto puede demorar unos segundos.
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* PRODUCTIVIDAD */}
-      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      {/* RESULTADOS DEL DUELO */}
 
-        <h2 className="text-lg font-bold text-gray-900">
-          Productividad operativa
-        </h2>
+      {resultado && !loading && (
+        <div className="animate-fade-in">
+          {/* TARJETAS DE EMPLEADOS */}
 
-        <p className="mt-1 text-sm text-gray-500">
-          Distribución de tareas completadas y pendientes.
-        </p>
+          <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {/* CANDIDATO A */}
 
-        <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
+            <TarjetaEmpleado
+              empleado={{
+                nombre: `${resultado.candidato_a.nombre} ${resultado.candidato_a.apellido}`,
 
-          {datosTareas.map((empleado) => {
-            const total =
-              empleado.completadas + empleado.pendientes;
+                iniciales: `${
+                  resultado.candidato_a.nombre?.charAt(0) || ""
+                }${
+                  resultado.candidato_a.apellido?.charAt(0) || ""
+                }`,
 
-            const porcentaje = Math.round(
-              (empleado.completadas / total) * 100
-            );
+                puesto: resultado.candidato_a.puesto,
 
-            return (
-              <div
-                key={empleado.nombre}
-                className="rounded-xl bg-gray-50 p-5"
-              >
-                <h3 className="text-center font-semibold text-gray-800">
-                  {empleado.nombre}
+                fecha_ingreso: formatearFecha(
+                  resultado.candidato_a.fecha_ingreso
+                ),
+
+                rendimiento: calcularRendimiento(
+                  resultado.candidato_a.evaluaciones
+                ),
+
+                color: "#3B82F6",
+              }}
+            />
+
+            {/* CANDIDATO B */}
+
+            <TarjetaEmpleado
+              empleado={{
+                nombre: `${resultado.candidato_b.nombre} ${resultado.candidato_b.apellido}`,
+
+                iniciales: `${
+                  resultado.candidato_b.nombre?.charAt(0) || ""
+                }${
+                  resultado.candidato_b.apellido?.charAt(0) || ""
+                }`,
+
+                puesto: resultado.candidato_b.puesto,
+
+                fecha_ingreso: formatearFecha(
+                  resultado.candidato_b.fecha_ingreso
+                ),
+
+                rendimiento: calcularRendimiento(
+                  resultado.candidato_b.evaluaciones
+                ),
+
+                color: "#8B5CF6",
+              }}
+            />
+          </div>
+
+          {/* ANÁLISIS ESTRUCTURADO DE LA IA */}
+
+          {analisisIA ? (
+            <div className="mt-8 space-y-6">
+
+              {/* RESUMEN */}
+
+              <section className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white">
+                    IA
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Análisis estratégico
+                    </h2>
+
+                    <p className="text-sm text-gray-500">
+                      Evaluación comparativa generada por Groq
+                    </p>
+                  </div>
+                </div>
+
+                <p className="leading-relaxed text-gray-700">
+                  {analisisIA.resumen || "No hay resumen disponible."}
+                </p>
+              </section>
+
+              {/* FORTALEZAS */}
+
+              <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div className="rounded-2xl border border-green-100 bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 flex items-center gap-2 font-bold text-gray-900">
+                    <span className="text-green-600">●</span>
+                    Fortalezas de {resultado.candidato_a.nombre}
+                  </h3>
+
+                  <ul className="space-y-3">
+                    {fortalezasA.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex gap-3 text-sm text-gray-600"
+                      >
+                        <span className="font-bold text-green-600">
+                          ✓
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+
+                    {fortalezasA.length === 0 && (
+                      <li className="text-sm text-gray-400">
+                        No hay fortalezas disponibles.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 flex items-center gap-2 font-bold text-gray-900">
+                    <span className="text-purple-600">●</span>
+                    Fortalezas de {resultado.candidato_b.nombre}
+                  </h3>
+
+                  <ul className="space-y-3">
+                    {fortalezasB.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex gap-3 text-sm text-gray-600"
+                      >
+                        <span className="font-bold text-purple-600">
+                          ✓
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+
+                    {fortalezasB.length === 0 && (
+                      <li className="text-sm text-gray-400">
+                        No hay fortalezas disponibles.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </section>
+
+              {/* OPORTUNIDADES DE MEJORA */}
+
+              <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 font-bold text-gray-900">
+                    Oportunidades de mejora -{" "}
+                    {resultado.candidato_a.nombre}
+                  </h3>
+
+                  <ul className="space-y-3">
+                    {mejorasA.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex gap-3 text-sm text-gray-600"
+                      >
+                        <span className="text-orange-500">!</span>
+                        {item}
+                      </li>
+                    ))}
+
+                    {mejorasA.length === 0 && (
+                      <li className="text-sm text-gray-400">
+                        No hay oportunidades de mejora disponibles.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 font-bold text-gray-900">
+                    Oportunidades de mejora -{" "}
+                    {resultado.candidato_b.nombre}
+                  </h3>
+
+                  <ul className="space-y-3">
+                    {mejorasB.map((item, index) => (
+                      <li
+                        key={index}
+                        className="flex gap-3 text-sm text-gray-600"
+                      >
+                        <span className="text-orange-500">!</span>
+                        {item}
+                      </li>
+                    ))}
+
+                    {mejorasB.length === 0 && (
+                      <li className="text-sm text-gray-400">
+                        No hay oportunidades de mejora disponibles.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </section>
+
+              {/* FACTORES COMPARADOS */}
+
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-5 text-lg font-bold text-gray-900">
+                  Comparación por factores
                 </h3>
 
-                <div className="mt-3">
-                  <GraficoDona
-                    valor={porcentaje}
-                    color={empleado.color}
-                    titulo="Completadas"
-                  />
+                <div className="space-y-5">
+                  {factoresComparados.map((factor, index) => (
+                    <div
+                      key={index}
+                      className="border-b border-gray-100 pb-4 last:border-0"
+                    >
+                      <h4 className="mb-3 font-semibold text-gray-800">
+                        {factor.factor}
+                      </h4>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div className="rounded-lg bg-blue-50 p-3">
+                          <p className="mb-1 text-xs font-bold text-blue-700">
+                            {resultado.candidato_a.nombre}
+                          </p>
+
+                          <p className="text-sm text-gray-700">
+                            {factor.empleado_a}
+                          </p>
+                        </div>
+
+                        <div className="rounded-lg bg-purple-50 p-3">
+                          <p className="mb-1 text-xs font-bold text-purple-700">
+                            {resultado.candidato_b.nombre}
+                          </p>
+
+                          <p className="text-sm text-gray-700">
+                            {factor.empleado_b}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {factoresComparados.length === 0 && (
+                    <p className="text-sm text-gray-400">
+                      No hay factores comparativos disponibles.
+                    </p>
+                  )}
                 </div>
+              </section>
 
-                <div className="mt-3 grid grid-cols-2 gap-3 text-center">
+              {/* RECOMENDACIONES */}
 
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-xl font-bold text-gray-900">
-                      {empleado.completadas}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Completadas
-                    </p>
-                  </div>
+              <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-6">
+                <h3 className="mb-4 text-lg font-bold text-gray-900">
+                  Recomendaciones estratégicas
+                </h3>
 
-                  <div className="rounded-lg bg-white p-3">
-                    <p className="text-xl font-bold text-gray-900">
-                      {empleado.pendientes}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Pendientes
-                    </p>
-                  </div>
+                <div className="space-y-3">
+                  {recomendaciones.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex gap-3 text-sm text-gray-700"
+                    >
+                      <span className="font-bold text-blue-600">
+                        {index + 1}.
+                      </span>
 
+                      {item}
+                    </div>
+                  ))}
+
+                  {recomendaciones.length === 0 && (
+                    <p className="text-sm text-gray-400">
+                      No hay recomendaciones disponibles.
+                    </p>
+                  )}
                 </div>
-              </div>
-            );
-          })}
+              </section>
 
+              {/* CONCLUSIÓN */}
+
+              <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h3 className="mb-3 text-lg font-bold text-gray-900">
+                  Conclusión del análisis
+                </h3>
+
+                <p className="leading-relaxed text-gray-700">
+                  {analisisIA.conclusion ||
+                    "No hay una conclusión disponible."}
+                </p>
+
+                <div className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
+                  <strong>Importante:</strong> este análisis es una
+                  herramienta de apoyo para RR. HH. La decisión final
+                  debe ser revisada y tomada por el administrador.
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+              <p className="font-semibold text-amber-800">
+                No se recibió un análisis estructurado de la IA.
+              </p>
+
+              <p className="mt-2 text-sm text-amber-700">
+                Verifica que el backend esté devolviendo
+                veredicto_ia como un objeto JSON.
+              </p>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* RESULTADO FINAL */}
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
-
-        <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
-          Resultado del duelo
-        </p>
-
-        <h2 className="mt-3 text-2xl font-bold text-gray-900">
-          {ganador.nombre}
-        </h2>
-
-        <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          Según los datos demostrativos, {ganador.nombre} obtiene
-          el mayor rendimiento general, con una diferencia de{" "}
-          {diferencia} puntos porcentuales respecto al otro empleado.
-        </p>
-
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-          <div className="rounded-xl bg-white p-4">
-            <p className="text-sm font-semibold text-gray-800">
-              Principal fortaleza de María
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Productividad: {maria.productividad}%
-            </p>
-          </div>
-
-          <div className="rounded-xl bg-white p-4">
-            <p className="text-sm font-semibold text-gray-800">
-              Principal fortaleza de Juan
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Asistencia: {juan.asistencia}%
-            </p>
-          </div>
-
-        </div>
-
-        <p className="mt-5 text-xs text-gray-500">
-          Los resultados son orientativos y se basan en datos ficticios.
-          La puntuación general no reemplaza una evaluación integral
-          del desempeño laboral.
-        </p>
-
-      </div>
-
-      <p className="mt-8 text-center text-xs text-gray-400">
-        SAPE · People Analytics · Módulo de comparación
-      </p>
-
+      )}
     </div>
   );
 }
