@@ -1,4 +1,3 @@
-
 import {
   ResponsiveContainer,
   PieChart,
@@ -104,25 +103,16 @@ function GraficoDona({ valor, color, titulo }) {
               stroke="none"
             >
               {datos.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={index === 0 ? color : "#E5E7EB"}
-                />
+                <Cell key={index} fill={index === 0 ? color : "#E5E7EB"} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={(value) => [`${value}%`, "Porcentaje"]}
-            />
+            <Tooltip formatter={(value) => [`${value}%`, "Porcentaje"]} />
           </PieChart>
         </ResponsiveContainer>
 
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-gray-900">
-            {valor}%
-          </span>
-          <span className="text-xs text-gray-400">
-            {titulo}
-          </span>
+          <span className="text-3xl font-bold text-gray-900">{valor}%</span>
+          <span className="text-xs text-gray-400">{titulo}</span>
         </div>
       </div>
     </div>
@@ -136,7 +126,6 @@ function GraficoDona({ valor, color, titulo }) {
 function TarjetaEmpleado({ empleado }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
       <div className="flex items-center gap-4">
         <div
           className="flex h-14 w-14 items-center justify-center rounded-2xl text-lg font-bold text-white"
@@ -146,12 +135,8 @@ function TarjetaEmpleado({ empleado }) {
         </div>
 
         <div>
-          <h3 className="font-bold text-gray-900">
-            {empleado.nombre}
-          </h3>
-          <p className="text-sm text-gray-500">
-            {empleado.puesto}
-          </p>
+          <h3 className="font-bold text-gray-900">{empleado.nombre}</h3>
+          <p className="text-sm text-gray-500">{empleado.puesto}</p>
           <p className="text-xs text-gray-400">
             {empleado.departamento} · {empleado.antiguedad}
           </p>
@@ -198,13 +183,9 @@ function Indicador({ titulo, valor, descripcion }) {
     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
       <p className="text-sm text-gray-500">{titulo}</p>
 
-      <h3 className="mt-2 text-3xl font-bold text-gray-900">
-        {valor}
-      </h3>
+      <h3 className="mt-2 text-3xl font-bold text-gray-900">{valor}</h3>
 
-      <p className="mt-1 text-xs text-gray-400">
-        {descripcion}
-      </p>
+      <p className="mt-1 text-xs text-gray-400">{descripcion}</p>
     </div>
   );
 }
@@ -217,19 +198,14 @@ export default function ComparacionEmpleados() {
   const maria = empleados[0];
   const juan = empleados[1];
 
-  const ganador =
-    maria.rendimiento > juan.rendimiento ? maria : juan;
+  const ganador = maria.rendimiento > juan.rendimiento ? maria : juan;
 
-  const diferencia = Math.abs(
-    maria.rendimiento - juan.rendimiento
-  );
+  const diferencia = Math.abs(maria.rendimiento - juan.rendimiento);
 
-  const totalTareas =
-    maria.tareasCompletadas +
-    juan.tareasCompletadas;
+  const totalTareas = maria.tareasCompletadas + juan.tareasCompletadas;
 
   const promedioAsistencia = Math.round(
-    (maria.asistencia + juan.asistencia) / 2
+    (maria.asistencia + juan.asistencia) / 2,
   );
 
   const datosTareas = [
@@ -249,7 +225,6 @@ export default function ComparacionEmpleados() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-
       {/* ENCABEZADO */}
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
@@ -268,24 +243,19 @@ export default function ComparacionEmpleados() {
 
         <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
           <p className="text-xs text-gray-400">Período analizado</p>
-          <p className="font-semibold text-gray-700">
-            Últimos 6 meses
-          </p>
+          <p className="font-semibold text-gray-700">Últimos 6 meses</p>
         </div>
       </div>
 
       {/* EMPLEADOS */}
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-
         <TarjetaEmpleado empleado={maria} />
 
         <TarjetaEmpleado empleado={juan} />
-
       </div>
 
       {/* INDICADORES GENERALES */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
         <Indicador
           titulo="Diferencia de rendimiento"
           valor={`${diferencia} pp`}
@@ -309,12 +279,10 @@ export default function ComparacionEmpleados() {
           valor={maria.tareasPendientes + juan.tareasPendientes}
           descripcion="Total de tareas pendientes"
         />
-
       </div>
 
       {/* COMPARACIÓN DE INDICADORES */}
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-900">
             Comparación de indicadores
@@ -333,16 +301,9 @@ export default function ComparacionEmpleados() {
               margin={{ left: 15, right: 20 }}
               barGap={5}
             >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
 
-              <XAxis
-                type="number"
-                domain={[0, 100]}
-                tick={{ fontSize: 12 }}
-              />
+              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
 
               <YAxis
                 type="category"
@@ -351,9 +312,7 @@ export default function ComparacionEmpleados() {
                 tick={{ fontSize: 11 }}
               />
 
-              <Tooltip
-                formatter={(value) => [`${value}%`, ""]}
-              />
+              <Tooltip formatter={(value) => [`${value}%`, ""]} />
 
               <Legend />
 
@@ -372,7 +331,6 @@ export default function ComparacionEmpleados() {
                 radius={[0, 5, 5, 0]}
                 barSize={13}
               />
-
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -380,7 +338,6 @@ export default function ComparacionEmpleados() {
 
       {/* EVOLUCIÓN DEL RENDIMIENTO */}
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
         <h2 className="text-lg font-bold text-gray-900">
           Evolución del rendimiento
         </h2>
@@ -392,7 +349,6 @@ export default function ComparacionEmpleados() {
         <div className="mt-6 h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={evolucion}>
-
               <defs>
                 <linearGradient id="colorMaria" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
@@ -432,7 +388,6 @@ export default function ComparacionEmpleados() {
                 fill="url(#colorJuan)"
                 strokeWidth={3}
               />
-
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -440,7 +395,6 @@ export default function ComparacionEmpleados() {
 
       {/* PRODUCTIVIDAD */}
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-
         <h2 className="text-lg font-bold text-gray-900">
           Productividad operativa
         </h2>
@@ -450,20 +404,13 @@ export default function ComparacionEmpleados() {
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-
           {datosTareas.map((empleado) => {
-            const total =
-              empleado.completadas + empleado.pendientes;
+            const total = empleado.completadas + empleado.pendientes;
 
-            const porcentaje = Math.round(
-              (empleado.completadas / total) * 100
-            );
+            const porcentaje = Math.round((empleado.completadas / total) * 100);
 
             return (
-              <div
-                key={empleado.nombre}
-                className="rounded-xl bg-gray-50 p-5"
-              >
+              <div key={empleado.nombre} className="rounded-xl bg-gray-50 p-5">
                 <h3 className="text-center font-semibold text-gray-800">
                   {empleado.nombre}
                 </h3>
@@ -477,36 +424,28 @@ export default function ComparacionEmpleados() {
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-3 text-center">
-
                   <div className="rounded-lg bg-white p-3">
                     <p className="text-xl font-bold text-gray-900">
                       {empleado.completadas}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Completadas
-                    </p>
+                    <p className="text-xs text-gray-500">Completadas</p>
                   </div>
 
                   <div className="rounded-lg bg-white p-3">
                     <p className="text-xl font-bold text-gray-900">
                       {empleado.pendientes}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Pendientes
-                    </p>
+                    <p className="text-xs text-gray-500">Pendientes</p>
                   </div>
-
                 </div>
               </div>
             );
           })}
-
         </div>
       </div>
 
       {/* RESULTADO FINAL */}
       <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
-
         <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">
           Resultado del duelo
         </p>
@@ -516,13 +455,12 @@ export default function ComparacionEmpleados() {
         </h2>
 
         <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          Según los datos demostrativos, {ganador.nombre} obtiene
-          el mayor rendimiento general, con una diferencia de{" "}
-          {diferencia} puntos porcentuales respecto al otro empleado.
+          Según los datos demostrativos, {ganador.nombre} obtiene el mayor
+          rendimiento general, con una diferencia de {diferencia} puntos
+          porcentuales respecto al otro empleado.
         </p>
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-
           <div className="rounded-xl bg-white p-4">
             <p className="text-sm font-semibold text-gray-800">
               Principal fortaleza de María
@@ -540,21 +478,18 @@ export default function ComparacionEmpleados() {
               Asistencia: {juan.asistencia}%
             </p>
           </div>
-
         </div>
 
         <p className="mt-5 text-xs text-gray-500">
-          Los resultados son orientativos y se basan en datos ficticios.
-          La puntuación general no reemplaza una evaluación integral
-          del desempeño laboral.
+          Los resultados son orientativos y se basan en datos ficticios. La
+          puntuación general no reemplaza una evaluación integral del desempeño
+          laboral.
         </p>
-
       </div>
 
       <p className="mt-8 text-center text-xs text-gray-400">
         SAPE · People Analytics · Módulo de comparación
       </p>
-
     </div>
   );
 }
