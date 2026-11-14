@@ -16,6 +16,7 @@ import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
 import DashboardEmpleado from "./pages/private/empleado/DashboardEmpleado";
 import EvaluacionesEmpleado from "./pages/private/empleado/EvaluacionesEmpleado";
 import PerfilEmpleado from "./pages/private/empleado/PerfilEmpleado";
+import CheckinEmpleado from "./pages/private/empleado/CheckinEmpleado";
 
 // Administrador 
 import AdminLayout from "./pages/private/admin/AdminLayout";
@@ -58,6 +59,7 @@ function App() {
             <Route index element={<DashboardEmpleado />} />
             <Route path="/empleado/evaluaciones" element={<EvaluacionesEmpleado />} />
             <Route path="/empleado/perfil" element={<PerfilEmpleado />} />
+            <Route path="checkin" element={<CheckinEmpleado />} />
           </Route>
         </Route>
 
