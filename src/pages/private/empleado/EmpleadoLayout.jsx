@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import { HeartPulse } from "lucide-react";
 import { useAuthStore } from "../../../store/useAuthStore";
 import {
   Bell,
@@ -56,6 +57,14 @@ const EmpleadoLayout = () => {
                 className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkActivo("/empleado/perfil")}`}
               >
                 <User className="w-4 h-4" /> Mi Perfil
+              </Link>
+
+              <Link
+                to="/empleado/checkin"
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkActivo("/empleado/checkin")}`}
+              >
+                <HeartPulse className="w-4 h-4" />
+                Check-in
               </Link>
             </nav>
           </div>
