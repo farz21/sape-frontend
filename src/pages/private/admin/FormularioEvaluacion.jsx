@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Save, ArrowLeft, Award, Calendar, CheckCircle } from 'lucide-react';
+import { Save, ArrowLeft, Award, Calendar, BarChart3 } from 'lucide-react';
 
 const FormularioEvaluacion = () => {
   const { id } = useParams(); // ID del empleado a evaluar
@@ -9,11 +9,37 @@ const FormularioEvaluacion = () => {
   const token = useAuthStore((state) => state.token);
   
   const [error, setError] = useState('');
+  const [ultimoCheckin, setUltimoCheckin] = useState(null);
+  const [cargandoCheckin, setCargandoCheckin] = useState(true);
+
   const [formData, setFormData] = useState({
     periodo: '',
     puntaje_final: '',
     semaforo: 'Verde' // Valor por defecto
   });
+
+  // 🔍 Cargar el contexto del último check-in al abrir el formulario
+  useEffect(() => {
+    const cargarContextoEmpleado = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/empleados/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUltimoCheckin(data.ultimoCheckin || null);
+        }
+      } catch (err) {
+        console.error("Error al cargar contexto de check-in:", err);
+      } finally {
+        setCargandoCheckin(false);
+      }
+    };
+
+    if (token && id) {
+      cargarContextoEmpleado();
+    }
+  }, [id, token]);
 
   // Calcular automáticamente el semáforo en base al puntaje (0 a 100)
   const manejarCambioPuntaje = (e) => {
@@ -70,7 +96,7 @@ const FormularioEvaluacion = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto pb-12">
       <div className="flex items-center gap-4 mb-8">
         <Link to={`/admin/empleados/${id}`} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
           <ArrowLeft size={24} />
@@ -79,6 +105,34 @@ const FormularioEvaluacion = () => {
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Registrar Nueva Evaluación</h1>
           <p className="mt-1 text-sm text-slate-500">Asigna un periodo, puntaje y clasifica el desempeño del colaborador.</p>
         </div>
+      </div>
+
+      {/* 📊 TARJETA DE CONTEXTO: ÚLTIMO CHECK-IN DEL EMPLEADO */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-6 shadow-xs">
+        <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <BarChart3 size={18} className="text-blue-600" />
+          <span>Contexto del Último Check-in Semanal</span>
+        </h3>
+        {cargandoCheckin ? (
+          <p className="text-xs text-slate-400">Cargando check-in reciente...</p>
+        ) : ultimoCheckin ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-slate-600">
+            <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-2xs">
+              <span className="font-semibold block text-slate-400 uppercase">Motivación</span>
+              <span className="text-sm font-bold text-blue-600">{ultimoCheckin.nivel_motivacion} / 5</span>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-2xs">
+              <span className="font-semibold block text-slate-400 uppercase">Carga Laboral</span>
+              <span className="text-sm font-bold text-indigo-600">{ultimoCheckin.carga_trabajo} / 5</span>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-2xs col-span-2">
+              <span className="font-semibold block text-slate-400 uppercase">Logros Recientes</span>
+              <p className="text-slate-700 truncate mt-0.5">{ultimoCheckin.logros_semana || "Sin registrar"}</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 italic">El empleado todavía no registró check-ins recientes en el sistema.</p>
+        )}
       </div>
 
       <form onSubmit={guardarEvaluacion} className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
@@ -126,7 +180,7 @@ const FormularioEvaluacion = () => {
             </div>
           </div>
 
-          {/* Semáforo (Automático o editable) */}
+          {/* Semáforo */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Clasificación (Semáforo)</label>
             <div className="flex items-center gap-4">
