@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from "../../../store/useAuthStore";
-import { CheckCircle2, ClipboardList, Award, Calendar } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Award, Calendar, Sparkles } from 'lucide-react';
 
 const API_URL = "http://localhost:3000";
 
@@ -37,7 +37,7 @@ const EvaluacionesEmpleado = () => {
           Mis Evaluaciones
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Historial de desempeño y calificaciones registradas en el sistema.
+          Historial de desempeño, calificaciones y feedback de IA registrado en el sistema.
         </p>
       </div>
 
@@ -59,35 +59,50 @@ const EvaluacionesEmpleado = () => {
         ) : evaluaciones.length > 0 ? (
           <ul className="divide-y divide-slate-200">
             {evaluaciones.map((evalItem) => (
-              <li key={evalItem.id_evaluacion} className="px-6 py-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 text-blue-600">
-                    <ClipboardList className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">
-                      Periodo: {evalItem.periodo}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> 
-                      Fecha: {new Date(evalItem.fecha).toLocaleDateString("es-AR")}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md text-white ${
-                        evalItem.semaforo === 'Verde' ? 'bg-emerald-600' :
-                        evalItem.semaforo === 'Amarillo' ? 'bg-amber-500' : 'bg-rose-600'
-                      }`}>
-                        {evalItem.semaforo}
-                      </span>
+              <li key={evalItem.id_evaluacion} className="px-6 py-5 hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 text-blue-600">
+                      <ClipboardList className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        Periodo: {evalItem.periodo}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> 
+                        Fecha: {new Date(evalItem.fecha).toLocaleDateString("es-AR")}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md text-white ${
+                          evalItem.semaforo === 'Verde' ? 'bg-emerald-600' :
+                          evalItem.semaforo === 'Amarillo' ? 'bg-amber-500' : 'bg-rose-600'
+                        }`}>
+                          {evalItem.semaforo}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-slate-800">
+                      {evalItem.puntaje_final}
+                    </span>
+                    <span className="text-xs text-slate-500 block">Pts / 100</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-lg font-bold text-slate-800">
-                    {evalItem.puntaje_final}
-                  </span>
-                  <span className="text-xs text-slate-500 block">Pts / 100</span>
-                </div>
+
+                {/* BLOQUE DEL FEEDBACK DE LA IA */}
+                {evalItem.analisis_generado && (
+                  <div className="mt-4 ml-9 rounded-lg border border-blue-100 bg-blue-50/60 p-3.5 text-xs text-slate-700 space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-blue-900">
+                      <Sparkles size={15} className="text-blue-600" />
+                      <span>Consejo / Feedback del Supervisor (IA):</span>
+                    </div>
+                    <p className="leading-relaxed text-slate-600 whitespace-pre-line pl-5">
+                      {evalItem.analisis_generado}
+                    </p>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
