@@ -9,11 +9,15 @@ const Empleados = () => {
   const [busqueda, setBusqueda] = useState('');
 
   const cargarEmpleados = async () => {
+    if (!token) return;
     try {
       const response = await fetch('http://localhost:3000/api/empleados', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (response.ok) setEmpleados(await response.json());
+      if (response.ok) {
+        const data = await response.json();
+        setEmpleados(Array.isArray(data) ? data : data.empleados || []);
+      }
     } catch (error) {
       console.error("Error al cargar empleados:", error);
     }
@@ -21,18 +25,18 @@ const Empleados = () => {
 
   useEffect(() => {
     cargarEmpleados();
-  }, []);
+  }, [token]);
 
-  const manejarEliminar = async (id, nombre) => {
+  const manejarEliminar = async (idEmpleado, nombre) => {
     if (!window.confirm(`¿Estás seguro de eliminar a ${nombre} del sistema? Esta acción no se puede deshacer.`)) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/empleados/${id}`, {
+      const response = await fetch(`http://localhost:3000/api/empleados/${idEmpleado}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
-        setEmpleados(empleados.filter(emp => emp.id !== id));
+        setEmpleados(empleados.filter(emp => emp.id_empleado !== idEmpleado));
       } else {
         alert("Error al eliminar el empleado.");
       }
@@ -42,8 +46,8 @@ const Empleados = () => {
   };
 
   const empleadosFiltrados = empleados.filter(emp => 
-    emp.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
-    emp.apellido.toLowerCase().includes(busqueda.toLowerCase()) ||
+    (emp.nombre && emp.nombre.toLowerCase().includes(busqueda.toLowerCase())) || 
+    (emp.apellido && emp.apellido.toLowerCase().includes(busqueda.toLowerCase())) ||
     (emp.legajo && emp.legajo.toLowerCase().includes(busqueda.toLowerCase()))
   );
 
@@ -88,7 +92,8 @@ const Empleados = () => {
             </thead>
             <tbody className="divide-y divide-slate-200">
               {empleadosFiltrados.length > 0 ? empleadosFiltrados.map((emp) => (
-                <tr key={emp.id} className="hover:bg-slate-50 transition">
+                // Usamos id_empleado como clave única
+                <tr key={emp.id_empleado} className="hover:bg-slate-50 transition">
                   <td className="px-6 py-4 font-medium text-slate-800">{emp.legajo || 'N/A'}</td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">{emp.nombre} {emp.apellido}</div>
@@ -97,13 +102,14 @@ const Empleados = () => {
                   <td className="px-6 py-4">{emp.email}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      <Link to={`/admin/empleados/${emp.id}`} className="text-emerald-600 hover:text-emerald-800" title="Evaluar">
+                      {/*  Apuntamos a id_empleado */}
+                      <Link to={`/admin/empleados/${emp.id_empleado}`} className="text-emerald-600 hover:text-emerald-800 font-medium" title="Evaluar">
                         Evaluar
                       </Link>
-                      <Link to={`/admin/empleados/editar/${emp.id}`} className="text-blue-600 hover:text-blue-800" title="Editar">
+                      <Link to={`/admin/empleados/editar/${emp.id_empleado}`} className="text-blue-600 hover:text-blue-800" title="Editar">
                         <Pencil size={18} />
                       </Link>
-                      <button onClick={() => manejarEliminar(emp.id, emp.nombre)} className="text-rose-600 hover:text-rose-800" title="Eliminar">
+                      <button onClick={() => manejarEliminar(emp.id_empleado, emp.nombre)} className="text-rose-600 hover:text-rose-800" title="Eliminar">
                         <Trash2 size={18} />
                       </button>
                     </div>
