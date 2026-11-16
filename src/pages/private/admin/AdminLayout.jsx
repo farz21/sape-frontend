@@ -16,9 +16,12 @@ const AdminLayout = () => {
     `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-950/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`;
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="flex min-h-screen">
-        <aside className="flex w-[30%] min-w-60 max-w-80 flex-col bg-slate-950 px-5 py-7 text-white">
+    // 1. Bloqueamos el alto a la pantalla completa y ocultamos el desborde general
+    <div className="h-screen overflow-hidden bg-slate-100 text-slate-900">
+      <div className="flex h-full">
+        
+        {/* 2. El aside mantiene su posición fija y su propio alto del 100% */}
+        <aside className="flex w-[30%] min-w-60 max-w-80 flex-col bg-slate-950 px-5 py-7 text-white h-full">
           <div className="mb-10 px-2">
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-indigo-300">S.A.P.E.</p>
             <h1 className="mt-2 text-xl font-extrabold">Panel de gestion</h1>
@@ -37,11 +40,15 @@ const AdminLayout = () => {
             <button onClick={salir} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white"><LogOut size={19} />Cerrar sesion</button>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-10"><Outlet /></main>
+
+        {/* 3. El main ahora maneja su propio scroll vertical de forma independiente */}
+        <main className="flex-1 overflow-y-auto px-5 py-8 sm:px-8 lg:px-10">
+          <Outlet />
+        </main>
+
       </div>
     </div>
   );
 };
 
 export default AdminLayout;
-
