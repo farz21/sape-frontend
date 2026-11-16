@@ -1,7 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { ArrowLeft, User, Briefcase, Mail, PlusCircle, Trash2, Calendar, Award } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Briefcase,
+  Mail,
+  PlusCircle,
+  Trash2,
+  Calendar,
+  Award,
+  Sparkles,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -13,7 +23,7 @@ import {
 } from "recharts";
 
 const Empleado = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // id_empleado
   const token = useAuthStore((state) => state.token);
 
   const [empleado, setEmpleado] = useState(null);
@@ -33,9 +43,11 @@ const Empleado = () => {
           const data = await response.json();
           setEmpleado(data.datos);
 
-          // Invertimos el array para que el gráfico fluya de izquierda (más antiguo) a derecha (más reciente)
-          const historialCronologico = [...data.evaluaciones].reverse();
-          setEvaluaciones(historialCronologico);
+          // ORDEN CRONOLÓGICO ESTRICTO: De más antiguo a más reciente para el gráfico
+          const evaluacionesOrdenadas = [...(data.evaluaciones || [])].sort(
+            (a, b) => new Date(a.fecha) - new Date(b.fecha),
+          );
+          setEvaluaciones(evaluacionesOrdenadas);
         }
       } catch (error) {
         console.error("Error al cargar historial:", error);
@@ -43,21 +55,30 @@ const Empleado = () => {
         setCargando(false);
       }
     };
-    cargarDatos();
+    if (token && id) {
+      cargarDatos();
+    }
   }, [id, token]);
 
   const eliminarEvaluacion = async (idEvaluacion) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta evaluación?")) return;
+    if (
+      !window.confirm("¿Estás seguro de que deseas eliminar esta evaluación?")
+    )
+      return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/evaluaciones/${idEvaluacion}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/evaluaciones/${idEvaluacion}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
 
       if (response.ok) {
-        // Filtramos el estado local para que desaparezca del gráfico y de la lista al instante
-        setEvaluaciones(prev => prev.filter(ev => ev.id_evaluacion !== idEvaluacion));
+        setEvaluaciones((prev) =>
+          prev.filter((ev) => ev.id_evaluacion !== idEvaluacion),
+        );
       } else {
         const data = await response.json();
         alert(data.mensaje || "No se pudo eliminar la evaluación.");
@@ -74,6 +95,7 @@ const Empleado = () => {
         Cargando legajo del empleado...
       </div>
     );
+
   if (!empleado)
     return (
       <div className="p-8 text-rose-500 font-medium">
@@ -97,14 +119,14 @@ const Empleado = () => {
               Ficha del Empleado
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Análisis de desempeño y datos de contacto.
+              Análisis de desempeño, evolución histórica e informes de IA.
             </p>
           </div>
         </div>
 
         {/* Botón de Nueva Evaluación */}
         <Link
-          to={`/admin/empleados/${empleado.id || id}/evaluar`}
+          to={`/admin/empleados/${empleado.id_empleado || id}/evaluar`}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors"
         >
           <PlusCircle size={18} />
@@ -118,14 +140,14 @@ const Empleado = () => {
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
               <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
-                {empleado.nombre.charAt(0)}
+                {empleado.nombre?.charAt(0)}
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   {empleado.nombre} {empleado.apellido}
                 </h2>
                 <p className="text-sm font-medium text-slate-500">
-                  ID: {empleado.id}
+                  ID Empleado: {empleado.id_empleado}
                 </p>
               </div>
             </div>
@@ -145,8 +167,10 @@ const Empleado = () => {
                 <User className="text-slate-400" size={18} />
                 <span className="text-sm text-slate-700">
                   Ingreso:{" "}
-                  {empleado.creado_en
-                    ? new Date(empleado.creado_en).toLocaleDateString()
+                  {empleado.fecha_ingreso
+                    ? new Date(empleado.fecha_ingreso).toLocaleDateString(
+                        "es-AR",
+                      )
                     : "-"}
                 </span>
               </div>
@@ -154,14 +178,14 @@ const Empleado = () => {
           </div>
         </div>
 
-        {/* Panel del Gráfico de Evolución y Lista de Evaluaciones */}
+        {/* Panel del Gráfico de Evolución Cronológica y Lista de Evaluaciones */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-bold text-slate-800 mb-2">
-              Evolución de Desempeño
+              Evolución de Desempeño (Cronológica)
             </h2>
             <p className="text-sm text-slate-500 mb-6">
-              Puntaje final obtenido en las evaluaciones históricas.
+              Puntaje final obtenido en orden temporal (pasado a presente).
             </p>
 
             <div className="h-72 w-full">
@@ -204,12 +228,12 @@ const Empleado = () => {
                       stroke="#2563eb"
                       strokeWidth={3}
                       dot={{
-                        r: 4,
+                        r: 5,
                         fill: "#2563eb",
                         strokeWidth: 2,
                         stroke: "#fff",
                       }}
-                      activeDot={{ r: 6 }}
+                      activeDot={{ r: 7 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -221,55 +245,78 @@ const Empleado = () => {
             </div>
           </div>
 
-          {/* Listado Detallado de Evaluaciones con el Botón de Eliminar */}
+          {/* Listado de Evaluaciones con Análisis de IA integrado */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-              <h3 className="font-semibold text-slate-800">Historial de Evaluaciones</h3>
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800">
+                Historial y Feedback de IA
+              </h3>
             </div>
 
             {evaluaciones.length > 0 ? (
               <ul className="divide-y divide-slate-200">
-                {/* Nota: si prefieres ver la lista con el orden original de la base de datos, puedes usar [.reverse()] de nuevo o mapearlas tal cual */}
+                {/* Mostramos las más recientes arriba en la lista, manteniendo el gráfico cronológico */}
                 {[...evaluaciones].reverse().map((ev) => (
-                  <li key={ev.id_evaluacion} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 text-blue-600">
-                        <Award size={20} />
+                  <li
+                    key={ev.id_evaluacion}
+                    className="px-6 py-5 hover:bg-slate-50 transition space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                          <Award size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900">
+                            Periodo: {ev.periodo}
+                          </h4>
+                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                            <Calendar size={13} />
+                            {new Date(ev.fecha).toLocaleDateString("es-AR")}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                          Periodo: {ev.periodo}
-                        </h4>
-                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                          <Calendar size={13} />
-                          Fecha: {new Date(ev.fecha).toLocaleDateString("es-AR")}
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <span className="text-base font-bold text-slate-800">
+                            {ev.puntaje_final} Pts
+                          </span>
+                          <span
+                            className={`block text-xs font-bold px-2 py-0.5 rounded text-white uppercase text-center mt-1 ${
+                              ev.semaforo === "Verde"
+                                ? "bg-emerald-600"
+                                : ev.semaforo === "Amarillo"
+                                  ? "bg-amber-500"
+                                  : "bg-rose-600"
+                            }`}
+                          >
+                            {ev.semaforo}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => eliminarEvaluacion(ev.id_evaluacion)}
+                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          title="Eliminar evaluación"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* CAJA DE FEEDBACK GENERADO POR LA IA */}
+                    {ev.analisis_generado && (
+                      <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-xs text-slate-700 space-y-1 mt-2">
+                        <div className="flex items-center gap-1.5 font-semibold text-blue-900">
+                          <Sparkles size={15} className="text-blue-600" />
+                          <span>Análisis y Feedback Automático (IA):</span>
+                        </div>
+                        <p className="leading-relaxed text-slate-600 whitespace-pre-line pl-5">
+                          {ev.analisis_generado}
                         </p>
-                        <span className={`inline-block mt-2 text-xs font-bold px-2 py-0.5 rounded text-white ${
-                          ev.semaforo === 'Verde' ? 'bg-emerald-600' :
-                          ev.semaforo === 'Amarillo' ? 'bg-amber-500' : 'bg-rose-600'
-                        }`}>
-                          {ev.semaforo}
-                        </span>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <span className="text-base font-bold text-slate-800">
-                          {ev.puntaje_final}
-                        </span>
-                        <span className="text-xs text-slate-500 block">Pts</span>
-                      </div>
-
-                      {/* Botón de Eliminar Evaluación */}
-                      <button
-                        onClick={() => eliminarEvaluacion(ev.id_evaluacion)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="Eliminar evaluación"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                    )}
                   </li>
                 ))}
               </ul>
