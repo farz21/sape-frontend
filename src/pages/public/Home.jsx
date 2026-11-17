@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import HeaderPublic from '../../components/public/HeaderPublic';
-import FooterPublic from '../../components/public/FooterPublic';
 
 const Home = () => {
   return (
@@ -31,7 +30,6 @@ const Home = () => {
         </section>
       </main>
 
-      <FooterPublic />
     </div>
   );
 };

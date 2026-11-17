@@ -5,11 +5,12 @@ import Home from "./pages/public/Home";
 import Error404 from "./pages/public/Error404";
 import Login from "./pages/public/Login";
 import Registro from "./pages/public/Registro";
+import FooterPublic from "./components/public/FooterPublic"; 
 
 // Seguridad
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminPrivateRoutes from "./routes/AdminPrivateRoutes";
-import PublicRoute from "./routes/PublicRoute"; // <-- 1. Importa el nuevo protector
+import PublicRoute from "./routes/PublicRoute";
 
 // Empleado 
 import EmpleadoLayout from "./pages/private/empleado/EmpleadoLayout";
@@ -30,43 +31,51 @@ import ComparacionEmpleados from "./pages/private/admin/ComparacionEmpleados";
 function App() {
   return (
     <Router>
-      <Routes>
+      {/* 🌍 CONTENEDOR RAÍZ GLOBAL: Controla la altura y distribución en columna */}
+      <div className="flex flex-col min-h-[90vh] bg-slate-50 text-slate-900 font-sans justify-between">
         
-        {/* RUTAS PÚBLICAS PROTEGIDAS */}
-        {/* 2. Envuelve Home, Login y Registro en el PublicRoute */}
-        <Route element={<PublicRoute />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
-        </Route>
+        {/* Contenedor de las rutas */}
+        <div>
+          <Routes>
+            {/* RUTAS PÚBLICAS PROTEGIDAS */}
+            <Route element={<PublicRoute />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Registro />} />
+            </Route>
 
-        {/* RUTAS DEL ADMINISTRADOR */}
-        <Route element={<AdminPrivateRoutes />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="empleados" element={<Empleados />} />
-            <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
-            <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
-            <Route path="empleados/:id" element={<Empleado />} />
-            <Route path="empleados/:id/evaluar" element={<FormularioEvaluacion />} />
-            <Route path="empleados/comparar" element={<ComparacionEmpleados />} />
-          </Route>
-        </Route>
+            {/* RUTAS DEL ADMINISTRADOR */}
+            <Route element={<AdminPrivateRoutes />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="empleados" element={<Empleados />} />
+                <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
+                <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
+                <Route path="empleados/:id" element={<Empleado />} />
+                <Route path="empleados/:id/evaluar" element={<FormularioEvaluacion />} />
+                <Route path="empleados/comparar" element={<ComparacionEmpleados />} />
+              </Route>
+            </Route>
 
-        {/* RUTAS DEL EMPLEADO */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/empleado" element={<EmpleadoLayout />}>
-            <Route index element={<DashboardEmpleado />} />
-            <Route path="/empleado/evaluaciones" element={<EvaluacionesEmpleado />} />
-            <Route path="/empleado/perfil" element={<PerfilEmpleado />} />
-            <Route path="checkin" element={<CheckinEmpleado />} />
-          </Route>
-        </Route>
+            {/* RUTAS DEL EMPLEADO */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/empleado" element={<EmpleadoLayout />}>
+                <Route index element={<DashboardEmpleado />} />
+                <Route path="evaluaciones" element={<EvaluacionesEmpleado />} />
+                <Route path="perfil" element={<PerfilEmpleado />} />
+                <Route path="checkin" element={<CheckinEmpleado />} />
+              </Route>
+            </Route>
 
-        {/* RUTA NO ENCONTRADA */}
-        <Route path="*" element={<Error404 />} />
-        
-      </Routes>
+            {/* RUTA NO ENCONTRADA */}
+            <Route path="*" element={<Error404 />} />
+          </Routes>
+        </div>
+
+        {/* FOOTER GLOBAL */}
+        <FooterPublic />
+
+      </div>
     </Router>
   );
 }

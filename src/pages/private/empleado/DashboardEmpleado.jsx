@@ -39,7 +39,10 @@ const DashboardEmpleado = () => {
   const nombreMostrar = resumen?.empleado?.nombre || user?.nombre || "Empleado";
   const evaluaciones = resumen?.evaluaciones || [];
   const planes = resumen?.planes || [];
-  const ultimaEvaluacion = evaluaciones[0];
+  const evaluacionesOrdenadas = [...evaluaciones].sort(
+    (a, b) => b.id_evaluacion - a.id_evaluacion,
+  );
+  const ultimaEvaluacion = evaluacionesOrdenadas[0];
 
   return (
     <>
@@ -67,8 +70,7 @@ const DashboardEmpleado = () => {
           role="alert"
           className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
         >
-          {error} Verificá que el backend esté iniciado y tenga aplicada la
-          integración SQL.
+          {error}
         </p>
       )}
 
@@ -141,10 +143,13 @@ const DashboardEmpleado = () => {
         </section>
       </div>
 
+      {/* SECCIÓN DE LA ÚLTIMA EVALUACIÓN EN EL INICIO */}
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-slate-500" />
-          <h2 className="font-semibold text-slate-800">Última evaluación</h2>
+          <h2 className="font-semibold text-slate-800">
+            Última evaluación registrada
+          </h2>
         </div>
         {ultimaEvaluacion ? (
           <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
@@ -158,7 +163,8 @@ const DashboardEmpleado = () => {
             </p>
             <p>
               <span className="font-medium text-slate-800">Resultado:</span>{" "}
-              {ultimaEvaluacion.semaforo || "Pendiente"}
+              {ultimaEvaluacion.semaforo || "Pendiente"} (
+              {ultimaEvaluacion.puntaje_final} pts)
             </p>
           </div>
         ) : (

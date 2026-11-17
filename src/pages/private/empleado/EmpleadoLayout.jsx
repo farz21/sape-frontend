@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
-import { HeartPulse } from "lucide-react";
-import { useAuthStore } from "../../../store/useAuthStore";
 import {
+  HeartPulse,
   Bell,
   LogOut,
   UserCircle,
@@ -9,7 +8,7 @@ import {
   ClipboardList,
   User,
 } from "lucide-react";
-
+import { useAuthStore } from "../../../store/useAuthStore";
 const EmpleadoLayout = () => {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -29,8 +28,9 @@ const EmpleadoLayout = () => {
       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900";
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-slate-50">
-      <header className="sticky top-0 z-10 bg-white border-b shadow-sm border-slate-200">
+    <div className="flex flex-col min-h-screen font-sans bg-slate-50 text-slate-900">
+      {/* HEADER DE NAVEGACIÓN */}
+      <header className="sticky top-0 z-10 bg-white border-b shadow-xs border-slate-200">
         <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
@@ -53,13 +53,6 @@ const EmpleadoLayout = () => {
                 <ClipboardList className="w-4 h-4" /> Evaluaciones
               </Link>
               <Link
-                to="/empleado/perfil"
-                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkActivo("/empleado/perfil")}`}
-              >
-                <User className="w-4 h-4" /> Mi Perfil
-              </Link>
-
-              <Link
                 to="/empleado/checkin"
                 className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkActivo("/empleado/checkin")}`}
               >
@@ -74,12 +67,19 @@ const EmpleadoLayout = () => {
               <Bell className="w-5 h-5" />
             </button>
             <div className="w-px h-8 bg-slate-200"></div>
-            <div className="flex items-center gap-2">
-              <UserCircle className="w-8 h-8 text-slate-400" />
-              <span className="hidden text-sm font-medium sm:block text-slate-700">
+
+            {/* ACCESO DIRECTO AL PERFIL DESDE EL ICONO Y NOMBRE */}
+            <Link
+              to="/empleado/perfil"
+              className="flex items-center gap-2 group hover:opacity-85 transition-opacity"
+              title="Ver mi perfil"
+            >
+              <UserCircle className="w-8 h-8 text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <span className="hidden text-sm font-medium sm:block text-slate-700 group-hover:text-blue-700">
                 {nombreMostrar}
               </span>
-            </div>
+            </Link>
+
             <button
               onClick={manejarLogout}
               className="p-2 ml-2 transition-colors rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
@@ -91,7 +91,8 @@ const EmpleadoLayout = () => {
         </div>
       </header>
 
-      <main className="flex-1 w-full px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      {/* CONTENIDO CENTRAL DINÁMICO */}
+      <main className="w-full px-4 pt-6 pb-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <Outlet />
       </main>
     </div>

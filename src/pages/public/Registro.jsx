@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import HeaderPublic from "../../components/public/HeaderPublic";
-import FooterPublic from "../../components/public/FooterPublic";
 
 const Registro = () => {
   const navigate = useNavigate();
@@ -13,7 +12,7 @@ const Registro = () => {
     nombre: "",
     apellido: "",
     email: "",
-    empresa: "",
+    empresa: "S.A.P.E.", // 👈 Iniciamos con S.A.P.E por defecto en el select
     password: "",
     confirmPassword: "",
     aceptar: false,
@@ -168,18 +167,18 @@ const Registro = () => {
               />
             </label>
 
+            {/* CAMBIO: Input de organización reemplazado por un Select con opción única S.A.P.E */}
             <label className={claseLabel}>
               Organización
-              <input
+              <select
                 className={claseInput}
-                type="text"
                 name="empresa"
                 value={datos.empresa}
                 onChange={manejarCambio}
-                placeholder="Nombre de tu empresa"
-                autoComplete="organization"
                 required
-              />
+              >
+                <option value="S.A.P.E.">S.A.P.E.</option>
+              </select>
             </label>
 
             {/* Contraseña con Ojito */}
@@ -285,7 +284,6 @@ const Registro = () => {
         </div>
       </main>
 
-      <FooterPublic />
     </div>
   );
 };
