@@ -139,6 +139,12 @@ const DashboardEmpleado = () => {
                 • {plan.objetivo}
               </p>
             ))}
+            <Link
+              to="/empleado/metas"
+              className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+            >
+              Ver y actualizar mis metas
+            </Link>
           </div>
         </section>
       </div>
