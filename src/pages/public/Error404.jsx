@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import HeaderPublic from '../../components/public/HeaderPublic';
-import FooterPublic from '../../components/public/FooterPublic';
 
 const Error404 = () => {
   return (
@@ -23,7 +22,7 @@ const Error404 = () => {
         </Link>
       </main>
 
-      <FooterPublic />
+  
     </div>
   );
 };

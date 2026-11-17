@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"; 
 import { useAuthStore } from "../../store/useAuthStore"; 
 import HeaderPublic from "../../components/public/HeaderPublic";
-import FooterPublic from "../../components/public/FooterPublic";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -184,7 +183,6 @@ const Login = () => {
         </div>
       </main>
 
-      <FooterPublic />
     </div>
   );
 };

@@ -15,9 +15,9 @@ const NavbarPublic = () => {
   return (
     <nav className="flex items-center justify-between max-w-7xl px-4 py-4 mx-auto md:px-8">
       {/* Logo */}
-      <div className="text-xl font-black tracking-tighter text-blue-700 md:text-2xl">
+      <Link to="/" className="text-xl font-black tracking-tighter text-blue-700 md:text-2xl">
         S.A.P.E.
-      </div>
+      </Link>
 
       {/* Contenedor de botones */}
       <div className="flex items-center gap-2 md:gap-4">

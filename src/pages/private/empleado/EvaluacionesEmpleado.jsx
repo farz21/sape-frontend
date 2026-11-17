@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { CheckCircle2, ClipboardList, Award, Calendar, Sparkles } from 'lucide-react';
+import { ClipboardList, Calendar, Sparkles } from "lucide-react";
 
 const API_URL = "http://localhost:3000";
 
@@ -17,8 +17,16 @@ const EvaluacionesEmpleado = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.mensaje || "No se pudieron cargar las evaluaciones.");
-        
+        if (!response.ok)
+          throw new Error(
+            data.mensaje || "No se pudieron cargar las evaluaciones.",
+          );
+        const evaluacionesOrdenadas = (data.evaluaciones || []).sort(
+          (a, b) => b.id_evaluacion - a.id_evaluacion,
+        );
+
+        setEvaluaciones(evaluacionesOrdenadas);
+
         setEvaluaciones(data.evaluaciones || []);
       } catch (err) {
         setError(err.message || "Error al conectar con el servidor.");
@@ -37,7 +45,8 @@ const EvaluacionesEmpleado = () => {
           Mis Evaluaciones
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Historial de desempeño, calificaciones y feedback de IA registrado en el sistema.
+          Historial completo de desempeño, calificaciones y feedback de IA
+          ordenados del más reciente al más antiguo.
         </p>
       </div>
 
@@ -55,11 +64,16 @@ const EvaluacionesEmpleado = () => {
         </div>
 
         {cargando ? (
-          <div className="p-8 text-center text-slate-500 text-sm">Cargando evaluaciones...</div>
+          <div className="p-8 text-center text-slate-500 text-sm">
+            Cargando evaluaciones...
+          </div>
         ) : evaluaciones.length > 0 ? (
           <ul className="divide-y divide-slate-200">
             {evaluaciones.map((evalItem) => (
-              <li key={evalItem.id_evaluacion} className="px-6 py-5 hover:bg-slate-50 transition-colors">
+              <li
+                key={evalItem.id_evaluacion}
+                className="px-6 py-5 hover:bg-slate-50 transition-colors"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="mt-1 text-blue-600">
@@ -70,14 +84,20 @@ const EvaluacionesEmpleado = () => {
                         Periodo: {evalItem.periodo}
                       </h3>
                       <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" /> 
-                        Fecha: {new Date(evalItem.fecha).toLocaleDateString("es-AR")}
+                        <Calendar className="w-3.5 h-3.5" />
+                        Fecha:{" "}
+                        {new Date(evalItem.fecha).toLocaleDateString("es-AR")}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md text-white ${
-                          evalItem.semaforo === 'Verde' ? 'bg-emerald-600' :
-                          evalItem.semaforo === 'Amarillo' ? 'bg-amber-500' : 'bg-rose-600'
-                        }`}>
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-md text-white ${
+                            evalItem.semaforo === "Verde"
+                              ? "bg-emerald-600"
+                              : evalItem.semaforo === "Amarillo"
+                                ? "bg-amber-500"
+                                : "bg-rose-600"
+                          }`}
+                        >
                           {evalItem.semaforo}
                         </span>
                       </div>
@@ -87,7 +107,9 @@ const EvaluacionesEmpleado = () => {
                     <span className="text-lg font-bold text-slate-800">
                       {evalItem.puntaje_final}
                     </span>
-                    <span className="text-xs text-slate-500 block">Pts / 100</span>
+                    <span className="text-xs text-slate-500 block">
+                      Pts / 100
+                    </span>
                   </div>
                 </div>
 
