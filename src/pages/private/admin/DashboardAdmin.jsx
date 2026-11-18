@@ -8,6 +8,11 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -63,7 +68,6 @@ const DashboardAdmin = () => {
   const exportarAExcel = () => {
     if (empleadosData.length === 0) return;
 
-    // Formatear los datos para que queden prolijos en el Excel
     const datosFormateados = empleadosData.map((emp) => ({
       "ID Legajo": emp.legajo || "N/A",
       "Nombre Completo": `${emp.nombre} ${emp.apellido}`,
@@ -74,22 +78,18 @@ const DashboardAdmin = () => {
         : "N/A",
     }));
 
-    // Crear libro de trabajo y hoja
     const hoja = XLSX.utils.json_to_sheet(datosFormateados);
-
-    // AGREGAR ESTO: Definir el ancho de las columnas (wch = width characters)
     hoja["!cols"] = [
-      { wch: 15 }, // Ancho para ID Legajo
-      { wch: 30 }, // Ancho para Nombre Completo
-      { wch: 35 }, // Ancho para Email
-      { wch: 20 }, // Ancho para Empresa
-      { wch: 15 }, // Ancho para Fecha Ingreso
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 35 },
+      { wch: 20 },
+      { wch: 15 },
     ];
 
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Empleados");
 
-    // Descargar archivo
     XLSX.writeFile(
       libro,
       `Reporte_Empleados_SAPE_${new Date().toLocaleDateString().replace(/\//g, "-")}.xlsx`,
@@ -100,7 +100,7 @@ const DashboardAdmin = () => {
     return <div className="p-8 text-slate-500">Cargando métricas...</div>;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
@@ -170,7 +170,8 @@ const DashboardAdmin = () => {
 
       {/* Gráficos Estadísticos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico Circular de Desempeño */}
+        
+        {/* 1. Gráfico Circular de Distribución de Semáforo */}
         <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
           <h2 className="text-lg font-bold text-slate-800 mb-6">
             Distribución de Desempeño
@@ -217,22 +218,40 @@ const DashboardAdmin = () => {
           </div>
         </div>
 
-        {/* Espacio para un segundo gráfico o tabla de empleados recientes */}
-        <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl flex flex-col justify-center items-center text-center">
-          <h2 className="text-lg font-bold text-slate-800 mb-2">
-            Gestión Documental
+        {/* 2. Gráfico de Barras: Rendimiento Promedio por Período (Recomendado por el profe) */}
+        <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
+          <h2 className="text-lg font-bold text-slate-800 mb-6">
+            Rendimiento Promedio por Período
           </h2>
-          <p className="text-slate-500 text-sm mb-6 max-w-sm">
-            Descarga la base de datos completa de tus empleados en formato Excel
-            (.xlsx) para auditorías externas o copias de seguridad.
-          </p>
-          <button
-            onClick={exportarAExcel}
-            className="px-6 py-3 text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm hover:bg-emerald-100 transition-colors"
-          >
-            Generar Archivo Excel
-          </button>
+          <div className="h-72 w-full">
+            {estadisticas?.rendimientoPorPeriodo?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={estadisticas.rendimientoPorPeriodo}
+                  margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="periodo" tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value) => [`${value} Pts`, "Promedio"]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Bar dataKey="promedio" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 font-medium text-center px-4">
+                No hay suficientes datos de períodos para generar la comparativa.
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
     </div>
   );

@@ -11,6 +11,9 @@ import {
   Calendar,
   Award,
   Sparkles,
+  HeartPulse,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   LineChart,
@@ -28,7 +31,13 @@ const Empleado = () => {
 
   const [empleado, setEmpleado] = useState(null);
   const [evaluaciones, setEvaluaciones] = useState([]);
+  const [checkins, setCheckins] = useState([]);
   const [cargando, setCargando] = useState(true);
+
+  // 📄 Estados para la paginación (3 elementos por página en cada sección)
+  const [paginaEvaluaciones, setPaginaEvaluaciones] = useState(1);
+  const [paginaCheckins, setPaginaCheckins] = useState(1);
+  const porPagina = 3;
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -42,8 +51,9 @@ const Empleado = () => {
         if (response.ok) {
           const data = await response.json();
           setEmpleado(data.datos);
+          setCheckins(data.checkins || []);
 
-          // ORDEN CRONOLÓGICO ESTRICTO: De más antiguo a más reciente para el gráfico
+          // ORDEN CRONOLÓGICO ESTRICTO: De más antiguo a más reciente para el gráfico de evaluaciones
           const evaluacionesOrdenadas = [...(data.evaluaciones || [])].sort(
             (a, b) => new Date(a.fecha) - new Date(b.fecha),
           );
@@ -60,6 +70,7 @@ const Empleado = () => {
     }
   }, [id, token]);
 
+  // Eliminar Evaluación
   const eliminarEvaluacion = async (idEvaluacion) => {
     if (
       !window.confirm("¿Estás seguro de que deseas eliminar esta evaluación?")
@@ -88,6 +99,49 @@ const Empleado = () => {
       alert("Error al conectar con el servidor.");
     }
   };
+
+  // 🗑️ Eliminar Check-in desde el Admin
+  const eliminarCheckin = async (idCheckin) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este check-in?"))
+      return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/admin/checkins/${idCheckin}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.ok) {
+        setCheckins((prev) =>
+          prev.filter((chk) => chk.id_checkin !== idCheckin),
+        );
+      } else {
+        const data = await response.json();
+        alert(data.mensaje || "No se pudo eliminar el check-in.");
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+      alert("Error al conectar con el servidor.");
+    }
+  };
+
+  // 📄 Lógica de paginación para Evaluaciones (Mostrando más recientes primero)
+  const evaluacionesInvertidas = [...evaluaciones].reverse();
+  const totalPaginasEvaluaciones = Math.ceil(evaluacionesInvertidas.length / porPagina);
+  const evaluacionesPaginadas = evaluacionesInvertidas.slice(
+    (paginaEvaluaciones - 1) * porPagina,
+    paginaEvaluaciones * porPagina
+  );
+
+  // 📄 Lógica de paginación para Check-ins
+  const totalPaginasCheckins = Math.ceil(checkins.length / porPagina);
+  const checkinsPaginados = checkins.slice(
+    (paginaCheckins - 1) * porPagina,
+    paginaCheckins * porPagina
+  );
 
   if (cargando)
     return (
@@ -178,7 +232,7 @@ const Empleado = () => {
           </div>
         </div>
 
-        {/* Panel del Gráfico de Evolución Cronológica y Lista de Evaluaciones */}
+        {/* Panel del Gráfico de Evolución y Listados */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-bold text-slate-800 mb-2">
@@ -245,87 +299,220 @@ const Empleado = () => {
             </div>
           </div>
 
-          {/* Listado de Evaluaciones con Análisis de IA integrado */}
+          {/* Listado de Evaluaciones con Análisis de IA integrado y Paginación */}
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
               <h3 className="font-semibold text-slate-800">
                 Historial y Feedback de IA
               </h3>
+              {evaluaciones.length > 0 && (
+                <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 px-2.5 py-1 rounded-full">
+                  Total: {evaluaciones.length}
+                </span>
+              )}
             </div>
 
-            {evaluaciones.length > 0 ? (
-              <ul className="divide-y divide-slate-200">
-                {/* Mostramos las más recientes arriba en la lista, manteniendo el gráfico cronológico */}
-                {[...evaluaciones].reverse().map((ev) => (
-                  <li
-                    key={ev.id_evaluacion}
-                    className="px-6 py-5 hover:bg-slate-50 transition space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                          <Award size={20} />
+            {evaluacionesPaginadas.length > 0 ? (
+              <>
+                <ul className="divide-y divide-slate-200">
+                  {evaluacionesPaginadas.map((ev) => (
+                    <li
+                      key={ev.id_evaluacion}
+                      className="px-6 py-5 hover:bg-slate-50 transition space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <Award size={20} />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">
+                              Periodo: {ev.periodo}
+                            </h4>
+                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                              <Calendar size={13} />
+                              {new Date(ev.fecha).toLocaleDateString("es-AR")}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-slate-900">
-                            Periodo: {ev.periodo}
-                          </h4>
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <Calendar size={13} />
-                            {new Date(ev.fecha).toLocaleDateString("es-AR")}
+
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <span className="text-base font-bold text-slate-800">
+                              {ev.puntaje_final} Pts
+                            </span>
+                            <span
+                              className={`block text-xs font-bold px-2 py-0.5 rounded text-white uppercase text-center mt-1 ${
+                                ev.semaforo === "Verde"
+                                  ? "bg-emerald-600"
+                                  : ev.semaforo === "Amarillo"
+                                    ? "bg-amber-500"
+                                    : "bg-rose-600"
+                              }`}
+                            >
+                              {ev.semaforo}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => eliminarEvaluacion(ev.id_evaluacion)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="Eliminar evaluación"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {ev.analisis_generado && (
+                        <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-xs text-slate-700 space-y-1 mt-2">
+                          <div className="flex items-center gap-1.5 font-semibold text-blue-900">
+                            <Sparkles size={15} className="text-blue-600" />
+                            <span>Análisis y Feedback Automático (IA):</span>
+                          </div>
+                          <p className="leading-relaxed text-slate-600 whitespace-pre-line pl-5">
+                            {ev.analisis_generado}
                           </p>
                         </div>
-                      </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
 
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <span className="text-base font-bold text-slate-800">
-                            {ev.puntaje_final} Pts
-                          </span>
-                          <span
-                            className={`block text-xs font-bold px-2 py-0.5 rounded text-white uppercase text-center mt-1 ${
-                              ev.semaforo === "Verde"
-                                ? "bg-emerald-600"
-                                : ev.semaforo === "Amarillo"
-                                  ? "bg-amber-500"
-                                  : "bg-rose-600"
-                            }`}
-                          >
-                            {ev.semaforo}
-                          </span>
-                        </div>
-
-                        <button
-                          onClick={() => eliminarEvaluacion(ev.id_evaluacion)}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                          title="Eliminar evaluación"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* CAJA DE FEEDBACK GENERADO POR LA IA */}
-                    {ev.analisis_generado && (
-                      <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-xs text-slate-700 space-y-1 mt-2">
-                        <div className="flex items-center gap-1.5 font-semibold text-blue-900">
-                          <Sparkles size={15} className="text-blue-600" />
-                          <span>Análisis y Feedback Automático (IA):</span>
-                        </div>
-                        <p className="leading-relaxed text-slate-600 whitespace-pre-line pl-5">
-                          {ev.analisis_generado}
-                        </p>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                {/* Controles de Paginación de Evaluaciones */}
+                {totalPaginasEvaluaciones > 1 && (
+                  <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                    <button
+                      onClick={() => setPaginaEvaluaciones((p) => Math.max(p - 1, 1))}
+                      disabled={paginaEvaluaciones === 1}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
+                    >
+                      <ChevronLeft size={14} /> Anterior
+                    </button>
+                    <span className="text-xs text-slate-600">
+                      Página <strong>{paginaEvaluaciones}</strong> de <strong>{totalPaginasEvaluaciones}</strong>
+                    </span>
+                    <button
+                      onClick={() => setPaginaEvaluaciones((p) => Math.min(p + 1, totalPaginasEvaluaciones))}
+                      disabled={paginaEvaluaciones === totalPaginasEvaluaciones}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
+                    >
+                      Siguiente <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="p-6 text-center text-sm text-slate-400">
-                No hay registros para mostrar.
+                No hay registros de evaluaciones para mostrar.
               </div>
             )}
           </div>
+
+          {/* 📋 SECCIÓN: Historial de Check-ins con Paginación y Opción de Eliminar */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <HeartPulse size={18} className="text-blue-600" />
+                Historial de Check-ins y Evidencias de Trabajo
+              </h3>
+              {checkins.length > 0 && (
+                <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 px-2.5 py-1 rounded-full">
+                  Total: {checkins.length}
+                </span>
+              )}
+            </div>
+
+            {checkinsPaginados.length > 0 ? (
+              <>
+                <ul className="divide-y divide-slate-200">
+                  {checkinsPaginados.map((chk) => (
+                    <li key={chk.id_checkin} className="px-6 py-5 hover:bg-slate-50 transition space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                          <Calendar size={13} />
+                          Fecha: {new Date(chk.fecha).toLocaleDateString("es-AR")}
+                        </span>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md">
+                              Motivación: {chk.nivel_motivacion}/5
+                            </span>
+                            <span className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-700 rounded-md">
+                              Carga: {chk.carga_trabajo}/5
+                            </span>
+                          </div>
+
+                          {/* 🗑️ Botón para eliminar check-in */}
+                          <button
+                            onClick={() => eliminarCheckin(chk.id_checkin)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="Eliminar check-in"
+                          >
+                            <Trash2 size={17} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-sm text-slate-700">
+                        <p>
+                          <strong className="text-slate-900">Logros de la semana:</strong> {chk.logros_semana || "Sin registrar"}
+                        </p>
+                        {chk.obstaculos && (
+                          <p className="text-slate-600">
+                            <strong className="text-slate-900">Obstáculos:</strong> {chk.obstaculos}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* ENLACE DE EVIDENCIA */}
+                      {chk.link_evidencia && (
+                        <div className="pt-2 border-t border-slate-100">
+                          <a 
+                            href={chk.link_evidencia} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1.5 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100"
+                          >
+                            🔗 Ver evidencia de trabajo / Pull Request aportada
+                          </a>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Controles de Paginación de Check-ins */}
+                {totalPaginasCheckins > 1 && (
+                  <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                    <button
+                      onClick={() => setPaginaCheckins((p) => Math.max(p - 1, 1))}
+                      disabled={paginaCheckins === 1}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
+                    >
+                      <ChevronLeft size={14} /> Anterior
+                    </button>
+                    <span className="text-xs text-slate-600">
+                      Página <strong>{paginaCheckins}</strong> de <strong>{totalPaginasCheckins}</strong>
+                    </span>
+                    <button
+                      onClick={() => setPaginaCheckins((p) => Math.min(p + 1, totalPaginasCheckins))}
+                      disabled={paginaCheckins === totalPaginasCheckins}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
+                    >
+                      Siguiente <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-8 text-center text-sm text-slate-400">
+                Este empleado todavía no ha registrado check-ins.
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

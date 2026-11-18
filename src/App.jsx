@@ -22,7 +22,7 @@ import MetasEmpleado from "./pages/private/empleado/MetasEmpleado";
 
 // Administrador 
 import AdminLayout from "./pages/private/admin/AdminLayout";
-import Dashboard from "./pages/private/admin/Dashboard";
+import DashboardAdmin from "./pages/private/admin/DashboardAdmin";
 import Empleados from "./pages/private/admin/Empleados";
 import Empleado from "./pages/private/admin/Empleado";
 import FormularioEmpleado from "./pages/private/admin/FormularioEmpleado";
@@ -48,7 +48,7 @@ function App() {
             {/* RUTAS DEL ADMINISTRADOR */}
             <Route element={<AdminPrivateRoutes />}>
               <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
+                <Route index element={<DashboardAdmin />} />
                 <Route path="empleados" element={<Empleados />} />
                 <Route path="empleados/nuevo" element={<FormularioEmpleado />} />
                 <Route path="empleados/editar/:id" element={<FormularioEmpleado />} />
