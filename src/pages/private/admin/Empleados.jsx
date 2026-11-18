@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from "../../../store/useAuthStore";
-import { UserPlus, Pencil, Trash2, Search } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Empleados = () => {
   const token = useAuthStore((state) => state.token);
   const [empleados, setEmpleados] = useState([]);
   const [busqueda, setBusqueda] = useState('');
+
+  // Estados para la paginación (10 elementos por página)
+  const [paginaActual, setPaginaActual] = useState(1);
+  const elementosPorPagina = 10;
 
   const cargarEmpleados = async () => {
     if (!token) return;
@@ -45,14 +49,27 @@ const Empleados = () => {
     }
   };
 
+  // 🔍 Filtrado de empleados
   const empleadosFiltrados = empleados.filter(emp => 
     (emp.nombre && emp.nombre.toLowerCase().includes(busqueda.toLowerCase())) || 
     (emp.apellido && emp.apellido.toLowerCase().includes(busqueda.toLowerCase())) ||
     (emp.legajo && emp.legajo.toLowerCase().includes(busqueda.toLowerCase()))
   );
 
+  // 📄 Lógica de Paginación (10 en 10)
+  const totalPaginas = Math.ceil(empleadosFiltrados.length / elementosPorPagina);
+  const indiceUltimoElemento = paginaActual * elementosPorPagina;
+  const indicePrimerElemento = indiceUltimoElemento - elementosPorPagina;
+  const empleadosPaginados = empleadosFiltrados.slice(indicePrimerElemento, indiceUltimoElemento);
+
+  // Cada vez que el usuario busque algo, lo devolvemos a la página 1
+  const manejarBusqueda = (e) => {
+    setBusqueda(e.target.value);
+    setPaginaActual(1);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Gestión de Empleados</h1>
@@ -67,17 +84,23 @@ const Empleados = () => {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 bg-slate-50">
-          <div className="relative max-w-md">
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
               placeholder="Buscar por nombre, apellido o legajo..." 
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={manejarBusqueda}
               className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+
+          {empleadosFiltrados.length > 0 && (
+            <span className="text-xs font-semibold text-slate-500 bg-slate-200/60 px-3 py-1.5 rounded-full">
+              Mostrando {empleadosPaginados.length} de {empleadosFiltrados.length} empleados
+            </span>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -91,8 +114,7 @@ const Empleados = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {empleadosFiltrados.length > 0 ? empleadosFiltrados.map((emp) => (
-                // Usamos id_empleado como clave única
+              {empleadosPaginados.length > 0 ? empleadosPaginados.map((emp) => (
                 <tr key={emp.id_empleado} className="hover:bg-slate-50 transition">
                   <td className="px-6 py-4 font-medium text-slate-800">{emp.legajo || 'N/A'}</td>
                   <td className="px-6 py-4">
@@ -102,7 +124,6 @@ const Empleados = () => {
                   <td className="px-6 py-4">{emp.email}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      {/*  Apuntamos a id_empleado */}
                       <Link to={`/admin/empleados/${emp.id_empleado}`} className="text-emerald-600 hover:text-emerald-800 font-medium" title="Evaluar">
                         Evaluar
                       </Link>
@@ -117,7 +138,7 @@ const Empleados = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
                     No se encontraron empleados con esa búsqueda.
                   </td>
                 </tr>
@@ -125,6 +146,31 @@ const Empleados = () => {
             </tbody>
           </table>
         </div>
+
+        {/* 📄 CONTROLES DE PAGINACIÓN */}
+        {totalPaginas > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50">
+            <button
+              onClick={() => setPaginaActual(p => Math.max(p - 1, 1))}
+              disabled={paginaActual === 1}
+              className="flex items-center gap-1 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <ChevronLeft size={16} /> Anterior
+            </button>
+
+            <span className="text-xs font-medium text-slate-600">
+              Página <strong className="text-slate-900">{paginaActual}</strong> de <strong className="text-slate-900">{totalPaginas}</strong>
+            </span>
+
+            <button
+              onClick={() => setPaginaActual(p => Math.min(p + 1, totalPaginas))}
+              disabled={paginaActual === totalPaginas}
+              className="flex items-center gap-1 px-4 py-2 text-xs font-semibold text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              Siguiente <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

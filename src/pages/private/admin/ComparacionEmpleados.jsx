@@ -1,13 +1,6 @@
-
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 
 import { useAuthStore } from "../../../store/useAuthStore";
 
@@ -42,16 +35,11 @@ function GraficoDona({ valor, color, titulo }) {
               stroke="none"
             >
               {datos.map((entry, index) => (
-                <Cell
-                  key={entry.name}
-                  fill={index === 0 ? color : "#E5E7EB"}
-                />
+                <Cell key={entry.name} fill={index === 0 ? color : "#E5E7EB"} />
               ))}
             </Pie>
 
-            <Tooltip
-              formatter={(value) => [`${value}%`, "Porcentaje"]}
-            />
+            <Tooltip formatter={(value) => [`${value}%`, "Porcentaje"]} />
           </PieChart>
         </ResponsiveContainer>
 
@@ -83,9 +71,7 @@ function TarjetaEmpleado({ empleado }) {
         </div>
 
         <div>
-          <h3 className="font-bold text-gray-900">
-            {empleado.nombre}
-          </h3>
+          <h3 className="font-bold text-gray-900">{empleado.nombre}</h3>
 
           <p className="text-sm text-gray-500">
             {empleado.puesto || "Sin puesto asignado"}
@@ -116,7 +102,7 @@ function TarjetaEmpleado({ empleado }) {
 // COMPONENTE PRINCIPAL
 // ==========================================
 
-export default function ComparacionEmpleados() {
+const ComparacionEmpleados = () => {
   const token = useAuthStore((state) => state.token);
 
   const [empleadosLista, setEmpleadosLista] = useState([]);
@@ -132,8 +118,7 @@ export default function ComparacionEmpleados() {
   // ==========================================
 
   const analisisIA =
-    resultado?.veredicto_ia &&
-    typeof resultado.veredicto_ia === "object"
+    resultado?.veredicto_ia && typeof resultado.veredicto_ia === "object"
       ? resultado.veredicto_ia
       : null;
 
@@ -159,14 +144,11 @@ export default function ComparacionEmpleados() {
       try {
         setError("");
 
-        const res = await axios.get(
-          "http://localhost:3000/api/empleados",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("http://localhost:3000/api/empleados", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         // Admite distintas estructuras de respuesta
         const lista = Array.isArray(res.data)
@@ -174,21 +156,16 @@ export default function ComparacionEmpleados() {
           : res.data.empleados || res.data.data || [];
 
         if (!Array.isArray(lista)) {
-          throw new Error(
-            "El servidor no devolvió una lista válida."
-          );
+          throw new Error("El servidor no devolvió una lista válida.");
         }
 
         setEmpleadosLista(lista);
       } catch (err) {
-        console.error(
-          "Error cargando empleados:",
-          err.response?.data || err
-        );
+        console.error("Error cargando empleados:", err.response?.data || err);
 
         setError(
           err.response?.data?.mensaje ||
-            "Error al cargar la lista de empleados. Verifica tu sesión."
+            "Error al cargar la lista de empleados. Verifica tu sesión.",
         );
       }
     };
@@ -207,15 +184,12 @@ export default function ComparacionEmpleados() {
 
     const suma = evaluaciones.reduce(
       (acc, ev) => acc + (Number(ev.puntaje_final) || 0),
-      0
+      0,
     );
 
     const promedio = suma / evaluaciones.length;
 
-    return Math.max(
-      0,
-      Math.min(100, Math.round(promedio * 10))
-    );
+    return Math.max(0, Math.min(100, Math.round(promedio)));
   };
 
   // ==========================================
@@ -275,27 +249,23 @@ export default function ComparacionEmpleados() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       console.log("Respuesta del duelo:", response.data);
       console.log(
         "Análisis IA:",
         response.data.veredicto_ia,
-        typeof response.data.veredicto_ia
+        typeof response.data.veredicto_ia,
       );
 
       setResultado(response.data);
     } catch (err) {
       console.error("Error al generar el duelo:", err);
-      console.error(
-        "Respuesta del servidor:",
-        err.response?.data
-      );
+      console.error("Respuesta del servidor:", err.response?.data);
 
       setError(
-        err.response?.data?.mensaje ||
-          "Error al conectar con el servidor."
+        err.response?.data?.mensaje || "Error al conectar con el servidor.",
       );
     } finally {
       setLoading(false);
@@ -336,18 +306,15 @@ export default function ComparacionEmpleados() {
                 setError("");
               }}
             >
-              <option value="">
-                Seleccione un empleado...
-              </option>
+              <option value="">Seleccione un empleado...</option>
 
-              {empleadosLista.map((emp) => (
-                <option
-                  key={emp.id_empleado}
-                  value={emp.id_empleado}
-                >
-                  {emp.nombre} {emp.apellido}
-                </option>
-              ))}
+              {empleadosLista
+                .filter((emp) => String(emp.id_empleado) !== String(idEmpB))
+                .map((emp) => (
+                  <option key={emp.id_empleado} value={emp.id_empleado}>
+                    {emp.nombre} {emp.apellido}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -366,18 +333,15 @@ export default function ComparacionEmpleados() {
                 setError("");
               }}
             >
-              <option value="">
-                Seleccione un empleado...
-              </option>
+              <option value="">Seleccione un empleado...</option>
 
-              {empleadosLista.map((emp) => (
-                <option
-                  key={emp.id_empleado}
-                  value={emp.id_empleado}
-                >
-                  {emp.nombre} {emp.apellido}
-                </option>
-              ))}
+              {empleadosLista
+                .filter((emp) => String(emp.id_empleado) !== String(idEmpA))
+                .map((emp) => (
+                  <option key={emp.id_empleado} value={emp.id_empleado}>
+                    {emp.nombre} {emp.apellido}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -395,9 +359,7 @@ export default function ComparacionEmpleados() {
         {/* MENSAJE DE ERROR */}
 
         {error && (
-          <p className="mt-3 text-sm font-semibold text-red-500">
-            {error}
-          </p>
+          <p className="mt-3 text-sm font-semibold text-red-500">{error}</p>
         )}
       </div>
 
@@ -430,20 +392,18 @@ export default function ComparacionEmpleados() {
               empleado={{
                 nombre: `${resultado.candidato_a.nombre} ${resultado.candidato_a.apellido}`,
 
-                iniciales: `${
-                  resultado.candidato_a.nombre?.charAt(0) || ""
-                }${
+                iniciales: `${resultado.candidato_a.nombre?.charAt(0) || ""}${
                   resultado.candidato_a.apellido?.charAt(0) || ""
                 }`,
 
                 puesto: resultado.candidato_a.puesto,
 
                 fecha_ingreso: formatearFecha(
-                  resultado.candidato_a.fecha_ingreso
+                  resultado.candidato_a.fecha_ingreso,
                 ),
 
                 rendimiento: calcularRendimiento(
-                  resultado.candidato_a.evaluaciones
+                  resultado.candidato_a.evaluaciones,
                 ),
 
                 color: "#3B82F6",
@@ -456,20 +416,18 @@ export default function ComparacionEmpleados() {
               empleado={{
                 nombre: `${resultado.candidato_b.nombre} ${resultado.candidato_b.apellido}`,
 
-                iniciales: `${
-                  resultado.candidato_b.nombre?.charAt(0) || ""
-                }${
+                iniciales: `${resultado.candidato_b.nombre?.charAt(0) || ""}${
                   resultado.candidato_b.apellido?.charAt(0) || ""
                 }`,
 
                 puesto: resultado.candidato_b.puesto,
 
                 fecha_ingreso: formatearFecha(
-                  resultado.candidato_b.fecha_ingreso
+                  resultado.candidato_b.fecha_ingreso,
                 ),
 
                 rendimiento: calcularRendimiento(
-                  resultado.candidato_b.evaluaciones
+                  resultado.candidato_b.evaluaciones,
                 ),
 
                 color: "#8B5CF6",
@@ -481,7 +439,6 @@ export default function ComparacionEmpleados() {
 
           {analisisIA ? (
             <div className="mt-8 space-y-6">
-
               {/* RESUMEN */}
 
               <section className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
@@ -521,9 +478,7 @@ export default function ComparacionEmpleados() {
                         key={index}
                         className="flex gap-3 text-sm text-gray-600"
                       >
-                        <span className="font-bold text-green-600">
-                          ✓
-                        </span>
+                        <span className="font-bold text-green-600">✓</span>
                         {item}
                       </li>
                     ))}
@@ -548,9 +503,7 @@ export default function ComparacionEmpleados() {
                         key={index}
                         className="flex gap-3 text-sm text-gray-600"
                       >
-                        <span className="font-bold text-purple-600">
-                          ✓
-                        </span>
+                        <span className="font-bold text-purple-600">✓</span>
                         {item}
                       </li>
                     ))}
@@ -569,8 +522,7 @@ export default function ComparacionEmpleados() {
               <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
                   <h3 className="mb-4 font-bold text-gray-900">
-                    Oportunidades de mejora -{" "}
-                    {resultado.candidato_a.nombre}
+                    Oportunidades de mejora - {resultado.candidato_a.nombre}
                   </h3>
 
                   <ul className="space-y-3">
@@ -594,8 +546,7 @@ export default function ComparacionEmpleados() {
 
                 <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
                   <h3 className="mb-4 font-bold text-gray-900">
-                    Oportunidades de mejora -{" "}
-                    {resultado.candidato_b.nombre}
+                    Oportunidades de mejora - {resultado.candidato_b.nombre}
                   </h3>
 
                   <ul className="space-y-3">
@@ -704,14 +655,13 @@ export default function ComparacionEmpleados() {
                 </h3>
 
                 <p className="leading-relaxed text-gray-700">
-                  {analisisIA.conclusion ||
-                    "No hay una conclusión disponible."}
+                  {analisisIA.conclusion || "No hay una conclusión disponible."}
                 </p>
 
                 <div className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
-                  <strong>Importante:</strong> este análisis es una
-                  herramienta de apoyo para RR. HH. La decisión final
-                  debe ser revisada y tomada por el administrador.
+                  <strong>Importante:</strong> este análisis es una herramienta
+                  de apoyo para RR. HH. La decisión final debe ser revisada y
+                  tomada por el administrador.
                 </div>
               </section>
             </div>
@@ -722,8 +672,8 @@ export default function ComparacionEmpleados() {
               </p>
 
               <p className="mt-2 text-sm text-amber-700">
-                Verifica que el backend esté devolviendo
-                veredicto_ia como un objeto JSON.
+                Verifica que el backend esté devolviendo veredicto_ia como un
+                objeto JSON.
               </p>
             </div>
           )}
@@ -731,4 +681,6 @@ export default function ComparacionEmpleados() {
       )}
     </div>
   );
-}
+};
+
+export default ComparacionEmpleados;
