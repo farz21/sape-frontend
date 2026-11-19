@@ -130,17 +130,19 @@ const Empleado = () => {
 
   // 📄 Lógica de paginación para Evaluaciones (Mostrando más recientes primero)
   const evaluacionesInvertidas = [...evaluaciones].reverse();
-  const totalPaginasEvaluaciones = Math.ceil(evaluacionesInvertidas.length / porPagina);
+  const totalPaginasEvaluaciones = Math.ceil(
+    evaluacionesInvertidas.length / porPagina,
+  );
   const evaluacionesPaginadas = evaluacionesInvertidas.slice(
     (paginaEvaluaciones - 1) * porPagina,
-    paginaEvaluaciones * porPagina
+    paginaEvaluaciones * porPagina,
   );
 
   // 📄 Lógica de paginación para Check-ins
   const totalPaginasCheckins = Math.ceil(checkins.length / porPagina);
   const checkinsPaginados = checkins.slice(
     (paginaCheckins - 1) * porPagina,
-    paginaCheckins * porPagina
+    paginaCheckins * porPagina,
   );
 
   if (cargando)
@@ -193,8 +195,15 @@ const Empleado = () => {
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-              <div className="h-16 w-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
+              <div className="relative h-16 w-16 overflow-hidden bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
                 {empleado.nombre?.charAt(0)}
+                {empleado.avatar_url && (
+                  <img
+                    src={empleado.avatar_url}
+                    alt={`Foto de ${empleado.nombre}`}
+                    className="absolute h-16 w-16 rounded-full object-cover"
+                  />
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
@@ -383,17 +392,24 @@ const Empleado = () => {
                 {totalPaginasEvaluaciones > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                     <button
-                      onClick={() => setPaginaEvaluaciones((p) => Math.max(p - 1, 1))}
+                      onClick={() =>
+                        setPaginaEvaluaciones((p) => Math.max(p - 1, 1))
+                      }
                       disabled={paginaEvaluaciones === 1}
                       className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
                     >
                       <ChevronLeft size={14} /> Anterior
                     </button>
                     <span className="text-xs text-slate-600">
-                      Página <strong>{paginaEvaluaciones}</strong> de <strong>{totalPaginasEvaluaciones}</strong>
+                      Página <strong>{paginaEvaluaciones}</strong> de{" "}
+                      <strong>{totalPaginasEvaluaciones}</strong>
                     </span>
                     <button
-                      onClick={() => setPaginaEvaluaciones((p) => Math.min(p + 1, totalPaginasEvaluaciones))}
+                      onClick={() =>
+                        setPaginaEvaluaciones((p) =>
+                          Math.min(p + 1, totalPaginasEvaluaciones),
+                        )
+                      }
                       disabled={paginaEvaluaciones === totalPaginasEvaluaciones}
                       className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
                     >
@@ -427,13 +443,17 @@ const Empleado = () => {
               <>
                 <ul className="divide-y divide-slate-200">
                   {checkinsPaginados.map((chk) => (
-                    <li key={chk.id_checkin} className="px-6 py-5 hover:bg-slate-50 transition space-y-3">
+                    <li
+                      key={chk.id_checkin}
+                      className="px-6 py-5 hover:bg-slate-50 transition space-y-3"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
                           <Calendar size={13} />
-                          Fecha: {new Date(chk.fecha).toLocaleDateString("es-AR")}
+                          Fecha:{" "}
+                          {new Date(chk.fecha).toLocaleDateString("es-AR")}
                         </span>
-                        
+
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md">
@@ -457,11 +477,17 @@ const Empleado = () => {
 
                       <div className="space-y-1 text-sm text-slate-700">
                         <p>
-                          <strong className="text-slate-900">Logros de la semana:</strong> {chk.logros_semana || "Sin registrar"}
+                          <strong className="text-slate-900">
+                            Logros de la semana:
+                          </strong>{" "}
+                          {chk.logros_semana || "Sin registrar"}
                         </p>
                         {chk.obstaculos && (
                           <p className="text-slate-600">
-                            <strong className="text-slate-900">Obstáculos:</strong> {chk.obstaculos}
+                            <strong className="text-slate-900">
+                              Obstáculos:
+                            </strong>{" "}
+                            {chk.obstaculos}
                           </p>
                         )}
                       </div>
@@ -469,9 +495,9 @@ const Empleado = () => {
                       {/* ENLACE DE EVIDENCIA */}
                       {chk.link_evidencia && (
                         <div className="pt-2 border-t border-slate-100">
-                          <a 
-                            href={chk.link_evidencia} 
-                            target="_blank" 
+                          <a
+                            href={chk.link_evidencia}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs font-semibold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1.5 transition-colors bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100"
                           >
@@ -487,17 +513,24 @@ const Empleado = () => {
                 {totalPaginasCheckins > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                     <button
-                      onClick={() => setPaginaCheckins((p) => Math.max(p - 1, 1))}
+                      onClick={() =>
+                        setPaginaCheckins((p) => Math.max(p - 1, 1))
+                      }
                       disabled={paginaCheckins === 1}
                       className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
                     >
                       <ChevronLeft size={14} /> Anterior
                     </button>
                     <span className="text-xs text-slate-600">
-                      Página <strong>{paginaCheckins}</strong> de <strong>{totalPaginasCheckins}</strong>
+                      Página <strong>{paginaCheckins}</strong> de{" "}
+                      <strong>{totalPaginasCheckins}</strong>
                     </span>
                     <button
-                      onClick={() => setPaginaCheckins((p) => Math.min(p + 1, totalPaginasCheckins))}
+                      onClick={() =>
+                        setPaginaCheckins((p) =>
+                          Math.min(p + 1, totalPaginasCheckins),
+                        )
+                      }
                       disabled={paginaCheckins === totalPaginasCheckins}
                       className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border rounded-lg border-slate-300 hover:bg-slate-50 disabled:opacity-40 transition"
                     >
@@ -512,7 +545,6 @@ const Empleado = () => {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>
