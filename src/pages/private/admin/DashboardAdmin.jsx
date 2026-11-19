@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Users, BarChart3, Download, TrendingUp } from "lucide-react";
+import {
+  Users,
+  BarChart3,
+  Download,
+  TrendingUp,
+  BellRing,
+  Check,
+} from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -26,10 +33,10 @@ const COLORES_SEMAFORO = {
 
 const DashboardAdmin = () => {
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
 
   const [estadisticas, setEstadisticas] = useState(null);
   const [empleadosData, setEmpleadosData] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -51,9 +58,20 @@ const DashboardAdmin = () => {
           },
         );
 
+        const resNotificaciones = await fetch(
+          "http://localhost:3000/api/admin/notificaciones",
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
         if (resEstats.ok && resEmpleados.ok) {
           setEstadisticas(await resEstats.json());
           setEmpleadosData(await resEmpleados.json());
+        }
+        if (resNotificaciones.ok) {
+          const notificacionesData = await resNotificaciones.json();
+          setNotificaciones(
+            Array.isArray(notificacionesData) ? notificacionesData : [],
+          );
         }
       } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
@@ -63,6 +81,28 @@ const DashboardAdmin = () => {
     };
     cargarDatos();
   }, [token]);
+
+  const marcarAlertaLeida = async (idNotificacion) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/admin/notificaciones/${idNotificacion}/leida`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!response.ok) throw new Error("No se pudo actualizar la alerta.");
+      setNotificaciones((actuales) =>
+        actuales.map((notificacion) =>
+          notificacion.id_notificacion === idNotificacion
+            ? { ...notificacion, leida: 1 }
+            : notificacion,
+        ),
+      );
+    } catch (error) {
+      console.error("Error al marcar la alerta:", error);
+    }
+  };
 
   // Función para exportar a Excel usando SheetJS
   const exportarAExcel = () => {
@@ -120,6 +160,75 @@ const DashboardAdmin = () => {
         </button>
       </div>
 
+      <section className="mb-8 rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="rounded-lg bg-amber-100 p-2 text-amber-700">
+            <BellRing size={20} />
+          </div>
+          <div>
+            <h2 className="font-bold text-slate-800">
+              Alertas preventivas de fatiga
+            </h2>
+            <p className="text-sm text-slate-500">
+              Avisos generados a partir de los check-ins recientes.
+            </p>
+          </div>
+          <span className="ml-auto rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+            {
+              notificaciones.filter(
+                (n) => n.tipo === "alerta_fatiga" && !Number(n.leida),
+              ).length
+            }{" "}
+            sin revisar
+          </span>
+        </div>
+
+        {notificaciones.filter((n) => n.tipo === "alerta_fatiga").length > 0 ? (
+          <ul className="divide-y divide-amber-100">
+            {notificaciones
+              .filter((n) => n.tipo === "alerta_fatiga")
+              .map((notificacion) => (
+                <li
+                  key={notificacion.id_notificacion}
+                  className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {notificacion.titulo}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {notificacion.mensaje}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {new Date(notificacion.fecha_creacion).toLocaleString(
+                        "es-AR",
+                      )}
+                      {Number(notificacion.leida)
+                        ? " · Revisada"
+                        : " · Pendiente de revisar"}
+                    </p>
+                  </div>
+                  {!Number(notificacion.leida) && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        marcarAlertaLeida(notificacion.id_notificacion)
+                      }
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+                    >
+                      <Check size={15} /> Marcar revisada
+                    </button>
+                  )}
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <p className="rounded-lg bg-slate-50 px-4 py-5 text-sm text-slate-500">
+            No hay alertas preventivas de fatiga para mostrar.
+          </p>
+        )}
+      </section>
+
       {/* Tarjetas de KPIs */}
       <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
         <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl flex items-center gap-4">
@@ -170,7 +279,6 @@ const DashboardAdmin = () => {
 
       {/* Gráficos Estadísticos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
         {/* 1. Gráfico Circular de Distribución de Semáforo */}
         <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
           <h2 className="text-lg font-bold text-slate-800 mb-6">
@@ -230,9 +338,19 @@ const DashboardAdmin = () => {
                   data={estadisticas.rendimientoPorPeriodo}
                   margin={{ top: 10, right: 10, bottom: 0, left: -20 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="periodo" tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    dataKey="periodo"
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
                   <Tooltip
                     formatter={(value) => [`${value} Pts`, "Promedio"]}
                     contentStyle={{
@@ -241,17 +359,21 @@ const DashboardAdmin = () => {
                       boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                     }}
                   />
-                  <Bar dataKey="promedio" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="promedio"
+                    fill="#2563eb"
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-400 font-medium text-center px-4">
-                No hay suficientes datos de períodos para generar la comparativa.
+                No hay suficientes datos de períodos para generar la
+                comparativa.
               </div>
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
