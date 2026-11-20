@@ -5,6 +5,8 @@ import {
   ArrowLeft,
   User,
   Briefcase,
+  Building2,
+  Layers,
   Mail,
   PlusCircle,
   Trash2,
@@ -24,6 +26,20 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+
+const DEPARTAMENTOS_MAP = {
+  1: "Desarrollo de Software",
+  2: "Recursos Humanos",
+  3: "Infraestructura y DevOps",
+};
+
+const PUESTOS_MAP = {
+  1: { nombre: "Desarrollador Junior", id_departamento: 1 },
+  2: { nombre: "Desarrollador Semi-Senior", id_departamento: 1 },
+  3: { nombre: "Desarrollador Senior", id_departamento: 1 },
+  4: { nombre: "Analista de Selección", id_departamento: 2 },
+  5: { nombre: "Soporte Técnico", id_departamento: 3 },
+};
 
 const Empleado = () => {
   const { id } = useParams(); // id_empleado
@@ -52,7 +68,37 @@ const Empleado = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          setEmpleado(data.datos);
+          let empData = data.datos || null;
+
+          // Respaldo: si data.datos no incluye departamento/puesto/id_puesto, lo buscamos en /api/empleados
+          if (
+            empData &&
+            !empData.departamento &&
+            !empData.nombre_departamento &&
+            !empData.puesto &&
+            !empData.nombre_puesto &&
+            !empData.id_puesto
+          ) {
+            const listaRes = await fetch("http://localhost:3000/api/empleados", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (listaRes.ok) {
+              const listaData = await listaRes.json();
+              const lista = Array.isArray(listaData)
+                ? listaData
+                : listaData.empleados || [];
+              const encontrado = lista.find(
+                (item) =>
+                  String(item.id_empleado) === String(id) ||
+                  String(item.id_usuario) === String(id),
+              );
+              if (encontrado) {
+                empData = { ...encontrado, ...empData };
+              }
+            }
+          }
+
+          setEmpleado(empData);
           setCheckins(data.checkins || []);
 
           // ORDEN CRONOLÓGICO ESTRICTO: De más antiguo a más reciente para el gráfico de evaluaciones
@@ -71,6 +117,20 @@ const Empleado = () => {
       cargarDatos();
     }
   }, [id, token]);
+
+  // Resolver nombre de puesto y departamento
+  const puestoInfo = empleado?.id_puesto
+    ? PUESTOS_MAP[Number(empleado.id_puesto)]
+    : null;
+  const nombrePuesto =
+    empleado?.puesto || empleado?.nombre_puesto || puestoInfo?.nombre || "No asignado";
+  const idDeptoResuelto =
+    empleado?.id_departamento || puestoInfo?.id_departamento || null;
+  const nombreDepartamento =
+    empleado?.departamento ||
+    empleado?.nombre_departamento ||
+    (idDeptoResuelto ? DEPARTAMENTOS_MAP[Number(idDeptoResuelto)] : null) ||
+    "No asignado";
 
   // Eliminar Evaluación
   const eliminarEvaluacion = async (idEvaluacion) => {
@@ -220,17 +280,31 @@ const Empleado = () => {
 
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Mail className="text-slate-400" size={18} />
-                <span className="text-sm text-slate-700">{empleado.email}</span>
+                <Mail className="text-slate-400 shrink-0" size={18} />
+                <span className="text-sm text-slate-700 break-all">{empleado.email}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Briefcase className="text-slate-400" size={18} />
+                <Briefcase className="text-slate-400 shrink-0" size={18} />
                 <span className="text-sm text-slate-700">
                   {empleado.empresa || "S.A.P.E."}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <User className="text-slate-400" size={18} />
+                <Building2 className="text-slate-400 shrink-0" size={18} />
+                <span className="text-sm text-slate-700">
+                  <strong className="font-semibold text-slate-900">Departamento:</strong>{" "}
+                  {nombreDepartamento}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Layers className="text-slate-400 shrink-0" size={18} />
+                <span className="text-sm text-slate-700">
+                  <strong className="font-semibold text-slate-900">Puesto:</strong>{" "}
+                  {nombrePuesto}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <User className="text-slate-400 shrink-0" size={18} />
                 <span className="text-sm text-slate-700">
                   Ingreso:{" "}
                   {empleado.fecha_ingreso
