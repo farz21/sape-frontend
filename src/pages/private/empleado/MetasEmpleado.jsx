@@ -1,15 +1,13 @@
-
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
 import {
   Target,
   CalendarDays,
-  CheckCircle2,
-  Clock,
   MessageSquare,
   RefreshCw,
   Save,
   AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 const API_URL = "http://localhost:3000";
@@ -22,6 +20,7 @@ const MetasEmpleado = () => {
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(null);
   const [mensajes, setMensajes] = useState({});
+  const [mostrarCompletadas, setMostrarCompletadas] = useState(false);
 
   // Cargar las metas del empleado
   const cargarMetas = async () => {
@@ -41,7 +40,15 @@ const MetasEmpleado = () => {
         throw new Error(data.mensaje || "No se pudieron cargar las metas.");
       }
 
-      setMetas(Array.isArray(data) ? data : []);
+      const lista = Array.isArray(data) ? data : [];
+      // Marcamos cuáles ya vienen persistidas como Completadas desde el backend
+      setMetas(
+        lista.map((item) => ({
+          ...item,
+          _completadaGuardada:
+            item.estado === "Completada" || Number(item.progreso) >= 100,
+        }))
+      );
     } catch (err) {
       setError(err.message || "Error al conectar con el servidor.");
     } finally {
@@ -64,9 +71,13 @@ const MetasEmpleado = () => {
       setGuardando(meta.id_meta);
       setError("");
 
+      const progresoNum = Math.min(100, Math.max(0, Number(meta.progreso) || 0));
       const estado =
-        Number(meta.progreso) === 100 ? "Completada" :
-        Number(meta.progreso) > 0 ? "En progreso" : "Pendiente";
+        progresoNum === 100
+          ? "Completada"
+          : progresoNum > 0
+            ? "En progreso"
+            : "Pendiente";
 
       const response = await fetch(
         `${API_URL}/api/empleado/metas/${meta.id_meta}/progreso`,
@@ -77,9 +88,10 @@ const MetasEmpleado = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            progreso: Number(meta.progreso),
+            progreso: progresoNum,
             estado,
-            comentarios_empleado: mensajes[meta.id_meta] ?? meta.comentarios_empleado ?? "",
+            comentarios_empleado:
+              mensajes[meta.id_meta] ?? meta.comentarios_empleado ?? "",
           }),
         }
       );
@@ -95,7 +107,9 @@ const MetasEmpleado = () => {
           item.id_meta === meta.id_meta
             ? {
                 ...item,
+                progreso: progresoNum,
                 estado,
+                _completadaGuardada: progresoNum === 100,
                 fecha_completada:
                   estado === "Completada"
                     ? new Date().toISOString().split("T")[0]
@@ -107,7 +121,11 @@ const MetasEmpleado = () => {
         )
       );
 
-      alert("Meta actualizada correctamente.");
+      if (progresoNum === 100) {
+        alert("Progreso del 100% guardado. La meta pasó a completadas.");
+      } else {
+        alert("Meta actualizada correctamente.");
+      }
     } catch (err) {
       setError(err.message || "Error al actualizar la meta.");
     } finally {
@@ -153,18 +171,36 @@ const MetasEmpleado = () => {
     );
   }
 
+  // Solo salen de la lista activa las que ya fueron guardadas al 100%
+  const metasActivas = metas.filter((m) => !m._completadaGuardada);
+  const metasCompletadas = metas.filter((m) => m._completadaGuardada);
+
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm font-medium text-blue-700">
-          Desarrollo profesional
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
-          Mis metas y objetivos
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Consultá tus objetivos de mejora y actualizá tu progreso.
-        </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-sm font-medium text-blue-700">
+            Desarrollo profesional
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
+            Mis metas y objetivos
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Consultá tus objetivos de mejora y actualizá tu progreso. Llevá el avance al 100% y tocá Guardar progreso para completarla.
+          </p>
+        </div>
+
+        {metasCompletadas.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setMostrarCompletadas((prev) => !prev)}
+            className="w-fit rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            {mostrarCompletadas
+              ? "Ocultar completadas"
+              : `Ver completadas (${metasCompletadas.length})`}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -179,40 +215,44 @@ const MetasEmpleado = () => {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">Total de metas</p>
+          <p className="text-sm text-slate-500">Metas activas</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">
-            {metas.length}
+            {metasActivas.length}
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">En progreso</p>
           <p className="mt-2 text-2xl font-bold text-blue-700">
-            {metas.filter((m) => m.estado === "En progreso").length}
+            {
+              metasActivas.filter((m) => m.estado === "En progreso").length
+            }
           </p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Completadas</p>
           <p className="mt-2 text-2xl font-bold text-emerald-700">
-            {metas.filter((m) => m.estado === "Completada").length}
+            {metasCompletadas.length}
           </p>
         </div>
       </div>
 
-      {metas.length === 0 ? (
+      {metasActivas.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
           <Target className="mx-auto mb-4 h-12 w-12 text-slate-300" />
           <h2 className="font-semibold text-slate-800">
-            Todavía no tenés metas asignadas
+            No tenés metas activas pendientes
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            Cuando se registre una evaluación y se generen objetivos, aparecerán acá.
+            {metasCompletadas.length > 0
+              ? "Completaste todas tus metas al 100%. Podés revisarlas si desplegás las completadas."
+              : "Cuando se registre una evaluación y se generen objetivos, aparecerán acá."}
           </p>
         </div>
       ) : (
         <div className="space-y-5">
-          {metas.map((meta) => (
+          {metasActivas.map((meta) => (
             <section
               key={meta.id_meta}
               className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
@@ -273,8 +313,7 @@ const MetasEmpleado = () => {
                   onChange={(e) =>
                     cambiarProgreso(meta.id_meta, e.target.value)
                   }
-                  disabled={meta.estado === "Completada"}
-                  className="mt-4 w-full cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
+                  className="mt-4 w-full cursor-pointer accent-blue-600"
                 />
 
                 <div className="flex justify-between text-xs text-slate-400">
@@ -322,6 +361,28 @@ const MetasEmpleado = () => {
                 </button>
               </div>
             </section>
+          ))}
+        </div>
+      )}
+
+      {mostrarCompletadas && metasCompletadas.length > 0 && (
+        <div className="space-y-3 border-t border-slate-200 pt-6">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+            Metas completadas (100%)
+          </h2>
+          {metasCompletadas.map((meta) => (
+            <div
+              key={meta.id_meta}
+              className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm"
+            >
+              <div className="flex items-center gap-2.5 text-slate-700">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                <span className="font-medium">{meta.titulo}</span>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                100%
+              </span>
+            </div>
           ))}
         </div>
       )}

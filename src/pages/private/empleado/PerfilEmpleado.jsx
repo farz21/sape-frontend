@@ -12,9 +12,14 @@ import {
 
 const PerfilEmpleado = () => {
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
   const [perfil, setPerfil] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarActual, setAvatarActual] = useState("");
+  const [errorImagen, setErrorImagen] = useState(false);
   const [guardandoAvatar, setGuardandoAvatar] = useState(false);
   const [mensajeAvatar, setMensajeAvatar] = useState("");
   const [errorAvatar, setErrorAvatar] = useState("");
@@ -42,7 +47,9 @@ const PerfilEmpleado = () => {
         if (response.ok) {
           const data = await response.json();
           setPerfil(data);
-          setAvatarUrl(data.avatar_url || "");
+          setAvatarActual(data.avatar_url || "");
+          setErrorImagen(false);
+          setAvatarUrl("");
         }
       } catch (error) {
         console.error("Error al cargar perfil:", error);
@@ -59,6 +66,8 @@ const PerfilEmpleado = () => {
     setErrorAvatar("");
     setGuardandoAvatar(true);
 
+    const urlEnviada = avatarUrl.trim();
+
     try {
       const response = await fetch(
         "http://localhost:3000/api/empleado/perfil/avatar",
@@ -68,14 +77,29 @@ const PerfilEmpleado = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ avatar_url: avatarUrl }),
+          body: JSON.stringify({ avatar_url: urlEnviada }),
         },
       );
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.mensaje || "No se pudo guardar la foto.");
-      setAvatarUrl(data.avatar_url || "");
-      setMensajeAvatar(data.mensaje);
+
+      const nuevaUrlGuardada =
+        data.avatar_url !== undefined ? data.avatar_url || "" : urlEnviada;
+
+      setAvatarActual(nuevaUrlGuardada);
+      setErrorImagen(false);
+      setAvatarUrl(""); // Limpia el input al guardar
+      setMensajeAvatar(data.mensaje || "¡Foto de perfil actualizada!");
+
+      if (user && typeof setUser === "function") {
+        setUser({ ...user, avatar_url: nuevaUrlGuardada });
+      }
+      window.dispatchEvent(
+        new CustomEvent("avatarActualizado", {
+          detail: { avatar_url: nuevaUrlGuardada },
+        }),
+      );
     } catch (error) {
       setErrorAvatar(error.message);
     } finally {
@@ -137,10 +161,11 @@ const PerfilEmpleado = () => {
         <div className="p-8 border-b border-slate-200 bg-slate-50 flex items-center gap-6">
           <div className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-full bg-blue-100 text-blue-700 text-3xl font-bold">
             {perfil.nombre.charAt(0)}
-            {avatarUrl && (
+            {avatarActual && !errorImagen && (
               <img
-                src={avatarUrl}
+                src={avatarActual}
                 alt={`Foto de ${perfil.nombre}`}
+                onError={() => setErrorImagen(true)}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             )}

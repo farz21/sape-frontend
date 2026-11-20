@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import {
@@ -25,6 +24,9 @@ const EmpleadoLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [avatarNavbar, setAvatarNavbar] = useState(user?.avatar_url || "");
+  const [errorAvatarNavbar, setErrorAvatarNavbar] = useState(false);
+
   const [notificaciones, setNotificaciones] = useState([]);
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
   const [cargandoNotificaciones, setCargandoNotificaciones] = useState(false);
@@ -37,12 +39,52 @@ const EmpleadoLayout = () => {
 
   const nombreMostrar = user?.nombre || "Empleado";
 
+  // Obtener avatar desde el perfil al cargar y escuchar actualizaciones en vivo
+  useEffect(() => {
+    if (user?.avatar_url) {
+      setAvatarNavbar(user.avatar_url);
+      setErrorAvatarNavbar(false);
+    }
+  }, [user?.avatar_url]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const obtenerAvatarPerfil = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/empleado/perfil`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvatarNavbar(data.avatar_url || "");
+          setErrorAvatarNavbar(false);
+        }
+      } catch (err) {
+        console.error("Error al obtener avatar para el nav:", err);
+      }
+    };
+
+    obtenerAvatarPerfil();
+
+    const alActualizarAvatar = (e) => {
+      const nuevaUrl = e?.detail?.avatar_url ?? "";
+      setAvatarNavbar(nuevaUrl);
+      setErrorAvatarNavbar(false);
+    };
+
+    window.addEventListener("avatarActualizado", alActualizarAvatar);
+    return () => {
+      window.removeEventListener("avatarActualizado", alActualizarAvatar);
+    };
+  }, [token]);
+
   const linkActivo = (ruta) =>
     location.pathname === ruta
       ? "text-blue-700 bg-blue-50"
       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900";
 
-  // Cargar notificaciones del empleado
+  // Cargar notificaciones del empleado (excluyendo las que ya están leídas en BD con leida === 1)
   const cargarNotificaciones = async () => {
     if (!token) return;
 
@@ -67,7 +109,11 @@ const EmpleadoLayout = () => {
         );
       }
 
-      setNotificaciones(Array.isArray(data) ? data : []);
+      const lista = Array.isArray(data) ? data : [];
+      const noLeidas = lista.filter(
+        (notificacion) => Number(notificacion.leida) !== 1
+      );
+      setNotificaciones(noLeidas);
     } catch (error) {
       console.error("Error al cargar notificaciones:", error);
       setErrorNotificaciones(error.message);
@@ -94,7 +140,7 @@ const EmpleadoLayout = () => {
     (notificacion) => Number(notificacion.leida) === 0
   ).length;
 
-  // Marcar una notificación como leída
+  // Marcar una notificación como leída y quitarla de la lista activa
   const marcarComoLeida = async (id) => {
     try {
       const response = await fetch(
@@ -114,11 +160,7 @@ const EmpleadoLayout = () => {
       }
 
       setNotificaciones((actuales) =>
-        actuales.map((notificacion) =>
-          notificacion.id_notificacion === id
-            ? { ...notificacion, leida: 1 }
-            : notificacion
-        )
+        actuales.filter((notificacion) => notificacion.id_notificacion !== id)
       );
     } catch (error) {
       console.error("Error al marcar notificación:", error);
@@ -126,7 +168,27 @@ const EmpleadoLayout = () => {
     }
   };
 
-  // Marcar todas como leídas
+  // Eliminar / limpiar una notificación con la X: la marca como leída en BD (leida = 1) para que no reaparezca al recargar
+  const eliminarNotificacion = async (e, id) => {
+    e.stopPropagation();
+
+    try {
+      await fetch(`${API_URL}/api/empleado/notificaciones/${id}/leida`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      console.error("Error al persistir estado de leída:", error);
+    } finally {
+      setNotificaciones((actuales) =>
+        actuales.filter((notificacion) => notificacion.id_notificacion !== id)
+      );
+    }
+  };
+
+  // Marcar todas como leídas y limpiarlas de la lista activa
   const marcarTodasLeidas = async () => {
     try {
       const response = await fetch(
@@ -145,12 +207,7 @@ const EmpleadoLayout = () => {
         throw new Error(data.mensaje || "No se pudieron actualizar.");
       }
 
-      setNotificaciones((actuales) =>
-        actuales.map((notificacion) => ({
-          ...notificacion,
-          leida: 1,
-        }))
-      );
+      setNotificaciones([]);
     } catch (error) {
       console.error("Error al marcar todas:", error);
       setErrorNotificaciones(error.message);
@@ -316,8 +373,7 @@ const EmpleadoLayout = () => {
                         const leida = Number(notificacion.leida) === 1;
 
                         return (
-                          <button
-                            type="button"
+                          <div
                             key={notificacion.id_notificacion}
                             onClick={() => {
                               if (!leida) {
@@ -327,12 +383,12 @@ const EmpleadoLayout = () => {
                               }
                             }}
                             className={`w-full p-4 text-left border-b border-slate-100 transition-colors hover:bg-slate-50 ${
-                              !leida ? "bg-blue-50/60" : "bg-white"
+                              !leida ? "bg-blue-50/60 cursor-pointer" : "bg-white"
                             }`}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`p-2 rounded-full ${
+                                className={`p-2 rounded-full shrink-0 ${
                                   leida
                                     ? "bg-slate-100 text-slate-400"
                                     : "bg-blue-100 text-blue-600"
@@ -347,13 +403,30 @@ const EmpleadoLayout = () => {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                  <h4 className="text-sm font-semibold text-slate-800">
+                                  <h4 className="text-sm font-semibold text-slate-800 truncate">
                                     {notificacion.titulo}
                                   </h4>
 
-                                  {!leida && (
-                                    <span className="w-2 h-2 bg-blue-600 rounded-full shrink-0" />
-                                  )}
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {!leida && (
+                                      <span className="w-2 h-2 bg-blue-600 rounded-full" />
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) =>
+                                        eliminarNotificacion(
+                                          e,
+                                          notificacion.id_notificacion
+                                        )
+                                      }
+                                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                      title="Eliminar notificación"
+                                      aria-label="Eliminar notificación"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
 
                                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -365,7 +438,7 @@ const EmpleadoLayout = () => {
                                 </p>
                               </div>
                             </div>
-                          </button>
+                          </div>
                         );
                       })
                     )}
@@ -393,7 +466,16 @@ const EmpleadoLayout = () => {
               className="flex items-center gap-2 group hover:opacity-85 transition-opacity"
               title="Ver mi perfil"
             >
-              <UserCircle className="w-8 h-8 text-slate-400 group-hover:text-blue-600 transition-colors" />
+              {avatarNavbar && !errorAvatarNavbar ? (
+                <img
+                  src={avatarNavbar}
+                  alt={`Foto de ${nombreMostrar}`}
+                  onError={() => setErrorAvatarNavbar(true)}
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 group-hover:ring-2 group-hover:ring-blue-500 transition"
+                />
+              ) : (
+                <UserCircle className="w-8 h-8 text-slate-400 group-hover:text-blue-600 transition-colors" />
+              )}
 
               <span className="hidden text-sm font-medium sm:block text-slate-700 group-hover:text-blue-700">
                 {nombreMostrar}

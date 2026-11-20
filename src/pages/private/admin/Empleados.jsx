@@ -7,6 +7,7 @@ const Empleados = () => {
   const token = useAuthStore((state) => state.token);
   const [empleados, setEmpleados] = useState([]);
   const [busqueda, setBusqueda] = useState('');
+  const [filtroCondicion, setFiltroCondicion] = useState('todos'); // 'todos' | 'empleado' | 'a_prueba'
 
   // Estados para la paginación (10 elementos por página)
   const [paginaActual, setPaginaActual] = useState(1);
@@ -49,12 +50,27 @@ const Empleados = () => {
     }
   };
 
-  // 🔍 Filtrado de empleados
-  const empleadosFiltrados = empleados.filter(emp => 
-    (emp.nombre && emp.nombre.toLowerCase().includes(busqueda.toLowerCase())) || 
-    (emp.apellido && emp.apellido.toLowerCase().includes(busqueda.toLowerCase())) ||
-    (emp.legajo && emp.legajo.toLowerCase().includes(busqueda.toLowerCase()))
-  );
+  const esAPrueba = (emp) => {
+    if (emp.en_periodo_prueba === true || Number(emp.en_periodo_prueba) === 1) {
+      return true;
+    }
+    const valor = String(emp.condicion_laboral || emp.estado_puesto || '').toLowerCase();
+    return valor === 'a_prueba' || valor === 'a prueba' || valor === 'prueba';
+  };
+
+  // 🔍 Filtrado de empleados por búsqueda y condición laboral
+  const empleadosFiltrados = empleados.filter(emp => {
+    const coincideBusqueda =
+      (emp.nombre && emp.nombre.toLowerCase().includes(busqueda.toLowerCase())) ||
+      (emp.apellido && emp.apellido.toLowerCase().includes(busqueda.toLowerCase())) ||
+      (emp.legajo && emp.legajo.toLowerCase().includes(busqueda.toLowerCase()));
+
+    if (!coincideBusqueda) return false;
+
+    if (filtroCondicion === 'a_prueba') return esAPrueba(emp);
+    if (filtroCondicion === 'empleado') return !esAPrueba(emp);
+    return true;
+  });
 
   // 📄 Lógica de Paginación (10 en 10)
   const totalPaginas = Math.ceil(empleadosFiltrados.length / elementosPorPagina);
@@ -62,9 +78,14 @@ const Empleados = () => {
   const indicePrimerElemento = indiceUltimoElemento - elementosPorPagina;
   const empleadosPaginados = empleadosFiltrados.slice(indicePrimerElemento, indiceUltimoElemento);
 
-  // Cada vez que el usuario busque algo, lo devolvemos a la página 1
+  // Cada vez que el usuario busque algo o cambie el filtro, lo devolvemos a la página 1
   const manejarBusqueda = (e) => {
     setBusqueda(e.target.value);
+    setPaginaActual(1);
+  };
+
+  const manejarFiltroCondicion = (e) => {
+    setFiltroCondicion(e.target.value);
     setPaginaActual(1);
   };
 
@@ -85,15 +106,28 @@ const Empleados = () => {
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar por nombre, apellido o legajo..." 
-              value={busqueda}
-              onChange={manejarBusqueda}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-2xl">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar por nombre, apellido o legajo..." 
+                value={busqueda}
+                onChange={manejarBusqueda}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <select
+              value={filtroCondicion}
+              onChange={manejarFiltroCondicion}
+              aria-label="Filtrar por condición del empleado"
+              className="px-3.5 py-2 border border-slate-300 rounded-lg text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="todos">Todos los estados</option>
+              <option value="empleado">Empleado (puesto fijo)</option>
+              <option value="a_prueba">A prueba</option>
+            </select>
           </div>
 
           {empleadosFiltrados.length > 0 && (

@@ -33,6 +33,7 @@ const Empleado = () => {
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [checkins, setCheckins] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [errorAvatar, setErrorAvatar] = useState(false);
 
   // 📄 Estados para la paginación (3 elementos por página en cada sección)
   const [paginaEvaluaciones, setPaginaEvaluaciones] = useState(1);
@@ -40,6 +41,7 @@ const Empleado = () => {
   const porPagina = 3;
 
   useEffect(() => {
+    setErrorAvatar(false);
     const cargarDatos = async () => {
       try {
         const response = await fetch(
@@ -195,13 +197,14 @@ const Empleado = () => {
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
-              <div className="relative h-16 w-16 overflow-hidden bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-2xl font-bold">
                 {empleado.nombre?.charAt(0)}
-                {empleado.avatar_url && (
+                {empleado.avatar_url && !errorAvatar && (
                   <img
                     src={empleado.avatar_url}
-                    alt={`Foto de ${empleado.nombre}`}
-                    className="absolute h-16 w-16 rounded-full object-cover"
+                    alt={`Foto de ${empleado.nombre} ${empleado.apellido}`}
+                    onError={() => setErrorAvatar(true)}
+                    className="absolute inset-0 h-16 w-16 rounded-full object-cover"
                   />
                 )}
               </div>
