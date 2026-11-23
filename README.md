@@ -1,16 +1,36 @@
-# React + Vite
+# Frontend — S.A.P.E. (Aplicación Web)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz web desarrollada con **React**, **Vite**, **React Router DOM**, **Zustand** y **Tailwind CSS**, diseñada para consumir la API del backend de **S.A.P.E.** en `http://localhost:3000`.
 
-Currently, two official plugins are available:
+## Requisitos previos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **Node.js**
+* **npm** 
+* **Backend de S.A.P.E.** en ejecución en `http://localhost:3000`
 
-## React Compiler
+## Instalación
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Abrí una terminal en la carpeta del frontend e instalá las dependencias:
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. Si el proyecto utiliza variables de entorno (por ejemplo `VITE_API_URL`), configurá el archivo correspondiente antes de iniciar.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Ejecución
+
+* **Servidor de desarrollo:**
+  ```bash
+  npm run dev
+  ```
+
+* **Compilación para producción:**
+  ```bash
+  npm run build
+  ```
+
+## Funcionalidades principales en la interfaz
+
+* **Acceso y registro:** inicio de sesión con manejo de sesión y registro de cuenta.
+* **Panel de administración:** gestión de empleados (alta, edición con selección de departamento y puesto, ficha histórica y baja), evaluaciones con semáforo, seguimiento de check-ins/alertas de fatiga, metas y comparativas/duelos con IA.
+* **Panel de empleado:** consulta de perfil, evaluaciones, metas, planes de acción, notificaciones y registro de check-ins.
