@@ -152,6 +152,7 @@ const Empleado = () => {
         setEvaluaciones((prev) =>
           prev.filter((ev) => ev.id_evaluacion !== idEvaluacion),
         );
+        window.alert("Evaluación eliminada correctamente.");
       } else {
         const data = await response.json();
         alert(data.mensaje || "No se pudo eliminar la evaluación.");
@@ -180,6 +181,7 @@ const Empleado = () => {
         setCheckins((prev) =>
           prev.filter((chk) => chk.id_checkin !== idCheckin),
         );
+        window.alert("Check-in eliminado correctamente.");
       } else {
         const data = await response.json();
         alert(data.mensaje || "No se pudo eliminar el check-in.");

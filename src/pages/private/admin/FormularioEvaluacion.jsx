@@ -87,7 +87,7 @@ const FormularioEvaluacion = () => {
       });
 
       if (response.ok) {
-        // Volvemos a la ficha del empleado
+        window.alert("Evaluación agregada correctamente.");
         navigate(`/admin/empleados/${id}`);
       } else {
         const data = await response.json();

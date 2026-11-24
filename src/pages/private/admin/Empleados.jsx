@@ -42,6 +42,7 @@ const Empleados = () => {
       });
       if (response.ok) {
         setEmpleados(empleados.filter(emp => emp.id_empleado !== idEmpleado));
+        window.alert("Empleado eliminado correctamente.");
       } else {
         alert("Error al eliminar el empleado.");
       }
