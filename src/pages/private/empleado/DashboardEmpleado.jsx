@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { ClipboardCheck, LineChart, CalendarDays, Target } from "lucide-react";
+import {
+  ClipboardCheck,
+  LineChart,
+  CalendarDays,
+  Target,
+  FolderKanban,
+} from "lucide-react";
 
 const API_URL = "http://localhost:3000";
 
@@ -9,19 +15,31 @@ const DashboardEmpleado = () => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const [resumen, setResumen] = useState(null);
+  const [proyectosAsignados, setProyectosAsignados] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const cargarResumen = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/empleado/dashboard`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (!response.ok)
+        const [resDashboard, resProyectos] = await Promise.all([
+          fetch(`${API_URL}/api/empleado/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/api/empleado/proyectos`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const data = await resDashboard.json();
+        if (!resDashboard.ok)
           throw new Error(data.mensaje || "No se pudo cargar tu resumen.");
         setResumen(data);
+
+        if (resProyectos.ok) {
+          const dataProyectos = await resProyectos.json();
+          setProyectosAsignados(Array.isArray(dataProyectos) ? dataProyectos : []);
+        }
       } catch (err) {
         setError(err.message || "No se pudo conectar con el servidor.");
       } finally {
@@ -52,8 +70,8 @@ const DashboardEmpleado = () => {
           ¡Hola, {nombreMostrar}!
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Aquí podés consultar tus evaluaciones, resultados y objetivos de
-          mejora.
+          Aquí podés consultar tus evaluaciones, resultados, proyectos asignados
+          y objetivos de mejora.
         </p>
       </div>
 
@@ -136,18 +154,70 @@ const DashboardEmpleado = () => {
           <div className="text-sm font-medium text-slate-600">
             {planes.slice(0, 2).map((plan) => (
               <p key={plan.id_plan} className="mb-1 truncate">
-                • {plan.objetivo}
+                - {plan.objetivo}
               </p>
             ))}
             <Link
               to="/empleado/metas"
-              className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+              className="mt-4 block w-full rounded-lg border border-slate-200 bg-slate-50 py-2 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
             >
               Ver y actualizar mis metas
             </Link>
           </div>
         </section>
       </div>
+
+      {/* PROYECTOS ASIGNADOS AL EMPLEADO */}
+      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <FolderKanban className="h-5 w-5 text-indigo-600" />
+            <h2 className="font-semibold text-slate-800">
+              Mis proyectos asignados
+            </h2>
+          </div>
+          <Link
+            to="/empleado/proyectos"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+          >
+            Ver detalle completo →
+          </Link>
+        </div>
+
+        {proyectosAsignados.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {proyectosAsignados.slice(0, 4).map((item) => (
+              <div
+                key={item.id_asignacion}
+                className="rounded-lg border border-slate-100 bg-slate-50/70 p-4 text-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold text-slate-900">
+                    {item.nombre_proyecto}
+                  </p>
+                  {item.estado && (
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                      {item.estado}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1.5 text-xs text-slate-600">
+                  <strong className="text-slate-800">Rol:</strong>{" "}
+                  {item.rol_en_proyecto || "No especificado"} ·{" "}
+                  <strong className="text-slate-800">Horas:</strong>{" "}
+                  {item.horas_asignadas ?? 0} hs
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            {cargando
+              ? "Cargando proyectos..."
+              : "Todavía no tenés proyectos asignados."}
+          </p>
+        )}
+      </section>
 
       {/* SECCIÓN DE LA ÚLTIMA EVALUACIÓN EN EL INICIO */}
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
