@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Target,
+  FolderKanban,
   CheckCheck,
   X,
   RefreshCw,
@@ -92,26 +93,23 @@ const EmpleadoLayout = () => {
       setCargandoNotificaciones(true);
       setErrorNotificaciones("");
 
-      const response = await fetch(
-        `${API_URL}/api/empleado/notificaciones`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/api/empleado/notificaciones`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.mensaje || "No se pudieron cargar las notificaciones."
+          data.mensaje || "No se pudieron cargar las notificaciones.",
         );
       }
 
       const lista = Array.isArray(data) ? data : [];
       const noLeidas = lista.filter(
-        (notificacion) => Number(notificacion.leida) !== 1
+        (notificacion) => Number(notificacion.leida) !== 1,
       );
       setNotificaciones(noLeidas);
     } catch (error) {
@@ -137,7 +135,7 @@ const EmpleadoLayout = () => {
 
   // Contar notificaciones sin leer
   const cantidadSinLeer = notificaciones.filter(
-    (notificacion) => Number(notificacion.leida) === 0
+    (notificacion) => Number(notificacion.leida) === 0,
   ).length;
 
   // Marcar una notificación como leída y quitarla de la lista activa
@@ -150,7 +148,7 @@ const EmpleadoLayout = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -160,7 +158,7 @@ const EmpleadoLayout = () => {
       }
 
       setNotificaciones((actuales) =>
-        actuales.filter((notificacion) => notificacion.id_notificacion !== id)
+        actuales.filter((notificacion) => notificacion.id_notificacion !== id),
       );
     } catch (error) {
       console.error("Error al marcar notificación:", error);
@@ -183,7 +181,7 @@ const EmpleadoLayout = () => {
       console.error("Error al persistir estado de leída:", error);
     } finally {
       setNotificaciones((actuales) =>
-        actuales.filter((notificacion) => notificacion.id_notificacion !== id)
+        actuales.filter((notificacion) => notificacion.id_notificacion !== id),
       );
     }
   };
@@ -198,7 +196,7 @@ const EmpleadoLayout = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -232,7 +230,6 @@ const EmpleadoLayout = () => {
       {/* HEADER DE NAVEGACIÓN */}
       <header className="sticky top-0 z-20 bg-white border-b shadow-sm border-slate-200">
         <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black tracking-tighter text-blue-700">
@@ -270,11 +267,17 @@ const EmpleadoLayout = () => {
                 <HeartPulse className="w-4 h-4" />
                 Check-in
               </Link>
+              <Link
+                to="/empleado/proyectos"
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${linkActivo("/empleado/proyectos")}`}
+              >
+                <FolderKanban className="w-4 h-4" />
+                Mis proyectos
+              </Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-4">
-
             {/* CAMPANITA DE NOTIFICACIONES */}
             <div className="relative">
               <button
@@ -300,7 +303,6 @@ const EmpleadoLayout = () => {
               {/* PANEL DESPLEGABLE */}
               {mostrarNotificaciones && (
                 <div className="absolute right-0 z-50 mt-3 overflow-hidden bg-white border border-slate-200 rounded-xl shadow-xl w-80 sm:w-96">
-
                   {/* ENCABEZADO */}
                   <div className="flex items-center justify-between p-4 border-b border-slate-100">
                     <div>
@@ -337,7 +339,6 @@ const EmpleadoLayout = () => {
 
                   {/* CONTENIDO */}
                   <div className="overflow-y-auto max-h-96">
-
                     {cargandoNotificaciones && notificaciones.length === 0 ? (
                       <div className="p-8 text-center">
                         <RefreshCw className="w-6 h-6 mx-auto mb-2 text-blue-600 animate-spin" />
@@ -377,13 +378,13 @@ const EmpleadoLayout = () => {
                             key={notificacion.id_notificacion}
                             onClick={() => {
                               if (!leida) {
-                                marcarComoLeida(
-                                  notificacion.id_notificacion
-                                );
+                                marcarComoLeida(notificacion.id_notificacion);
                               }
                             }}
                             className={`w-full p-4 text-left border-b border-slate-100 transition-colors hover:bg-slate-50 ${
-                              !leida ? "bg-blue-50/60 cursor-pointer" : "bg-white"
+                              !leida
+                                ? "bg-blue-50/60 cursor-pointer"
+                                : "bg-white"
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -417,7 +418,7 @@ const EmpleadoLayout = () => {
                                       onClick={(e) =>
                                         eliminarNotificacion(
                                           e,
-                                          notificacion.id_notificacion
+                                          notificacion.id_notificacion,
                                         )
                                       }
                                       className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
@@ -490,7 +491,6 @@ const EmpleadoLayout = () => {
             >
               <LogOut className="w-5 h-5" />
             </button>
-
           </div>
         </div>
       </header>

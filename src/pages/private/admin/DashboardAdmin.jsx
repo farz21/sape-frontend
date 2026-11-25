@@ -12,6 +12,7 @@ import {
   ChevronUp,
   ExternalLink,
   X,
+  Award,
 } from "lucide-react";
 import {
   PieChart,
@@ -36,68 +37,154 @@ const COLORES_SEMAFORO = {
   Pendiente: "#cbd5e1", // Slate 300
 };
 
+const construirPromedioCompetencias = (catalogoCompetencias, detallesPorEvaluacion) => {
+  const mapaCompetencias = new Map();
+
+  for (const comp of catalogoCompetencias) {
+    mapaCompetencias.set(String(comp.id_competencia), {
+      nombre: comp.nombre,
+      tipo_skill: comp.tipo_skill || "General",
+      suma: 0,
+      cantidad: 0,
+    });
+  }
+
+  for (const det of detallesPorEvaluacion) {
+    const puntaje = Number(det.puntaje_obtenido);
+    if (Number.isNaN(puntaje)) continue;
+
+    const clave = String(det.id_competencia ?? det.competencia ?? "");
+    if (!clave) continue;
+
+    if (!mapaCompetencias.has(clave)) {
+      mapaCompetencias.set(clave, {
+        nombre: det.competencia || `Competencia ${clave}`,
+        tipo_skill: det.tipo_skill || "General",
+        suma: 0,
+        cantidad: 0,
+      });
+    }
+
+    const item = mapaCompetencias.get(clave);
+    item.suma += puntaje;
+    item.cantidad += 1;
+  }
+
+  return Array.from(mapaCompetencias.values())
+    .filter((item) => item.cantidad > 0)
+    .map((item) => ({
+      nombre: item.nombre,
+      tipo_skill: item.tipo_skill,
+      promedio: Number((item.suma / item.cantidad).toFixed(1)),
+      evaluaciones: item.cantidad,
+    }))
+    .sort((a, b) => a.promedio - b.promedio);
+};
+
 const DashboardAdmin = () => {
   const token = useAuthStore((state) => state.token);
 
   const [estadisticas, setEstadisticas] = useState(null);
   const [empleadosData, setEmpleadosData] = useState([]);
   const [notificaciones, setNotificaciones] = useState([]);
+  const [promedioCompetencias, setPromedioCompetencias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [desplegadaAlertas, setDesplegadaAlertas] = useState(false);
 
   useEffect(() => {
+    if (!token) {
+      setCargando(false);
+      return;
+    }
+
     const cargarDatos = async () => {
       try {
-        // Cargar estadísticas para los gráficos
-        const resEstats = await fetch(
-          "http://localhost:3000/api/admin/estadisticas",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const headers = { Authorization: `Bearer ${token}` };
 
-        // Cargar lista de empleados para la exportación a Excel y vínculo de alertas
-        const resEmpleados = await fetch(
-          "http://localhost:3000/api/empleados",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const [resEstats, resEmpleados, resNotificaciones, resCompetencias] =
+          await Promise.all([
+            fetch("http://localhost:3000/api/admin/estadisticas", { headers }),
+            fetch("http://localhost:3000/api/empleados", { headers }),
+            fetch("http://localhost:3000/api/admin/notificaciones", {
+              headers,
+            }),
+            fetch("http://localhost:3000/api/competencias", { headers }),
+          ]);
 
-        const resNotificaciones = await fetch(
-          "http://localhost:3000/api/admin/notificaciones",
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-
+        let listaEmp = [];
         if (resEstats.ok && resEmpleados.ok) {
           setEstadisticas(await resEstats.json());
-          const listaEmp = await resEmpleados.json();
-          setEmpleadosData(
-            Array.isArray(listaEmp) ? listaEmp : listaEmp.empleados || [],
-          );
+          const empJson = await resEmpleados.json();
+          listaEmp = Array.isArray(empJson)
+            ? empJson
+            : empJson.empleados || [];
+          setEmpleadosData(listaEmp);
         }
+
         if (resNotificaciones.ok) {
           const notificacionesData = await resNotificaciones.json();
           setNotificaciones(
             Array.isArray(notificacionesData) ? notificacionesData : [],
           );
         }
+
+        let catalogoComp = [];
+        if (resCompetencias.ok) {
+          const compJson = await resCompetencias.json();
+          catalogoComp = Array.isArray(compJson)
+            ? compJson
+            : compJson.competencias || [];
+        }
+
+        // Recolectar detalles por competencia desde los legajos disponibles
+        const detallesRecolectados = [];
+        if (listaEmp.length > 0) {
+          const fichas = await Promise.allSettled(
+            listaEmp.slice(0, 20).map(async (emp) => {
+              const r = await fetch(
+                `http://localhost:3000/api/empleados/${emp.id_empleado}`,
+                { headers },
+              );
+              if (!r.ok) return null;
+              return r.json();
+            }),
+          );
+
+          for (const resultado of fichas) {
+            if (resultado.status !== "fulfilled" || !resultado.value) continue;
+            for (const ev of resultado.value.evaluaciones || []) {
+              if (Array.isArray(ev.detalles)) {
+                detallesRecolectados.push(...ev.detalles);
+              }
+            }
+          }
+        }
+
+        setPromedioCompetencias(
+          construirPromedioCompetencias(catalogoComp, detallesRecolectados),
+        );
       } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
       } finally {
         setCargando(false);
       }
     };
+
     cargarDatos();
   }, [token]);
 
   const obtenerIdEmpleadoAlerta = (notificacion) => {
     if (notificacion.id_empleado) return notificacion.id_empleado;
 
-    const textoAlerta = `${notificacion.titulo || ""} ${notificacion.mensaje || ""}`.toLowerCase();
+    const textoAlerta =
+      `${notificacion.titulo || ""} ${notificacion.mensaje || ""}`.toLowerCase();
     const encontrado = empleadosData.find((emp) => {
-      const nombreCompleto = `${emp.nombre || ""} ${emp.apellido || ""}`.trim().toLowerCase();
-      const legajo = String(emp.legajo || "").trim().toLowerCase();
+      const nombreCompleto = `${emp.nombre || ""} ${emp.apellido || ""}`
+        .trim()
+        .toLowerCase();
+      const legajo = String(emp.legajo || "")
+        .trim()
+        .toLowerCase();
       return (
         (nombreCompleto && textoAlerta.includes(nombreCompleto)) ||
         (legajo && textoAlerta.includes(legajo))
@@ -408,7 +495,7 @@ const DashboardAdmin = () => {
           </div>
         </div>
 
-        {/* 2. Gráfico de Barras: Rendimiento Promedio por Período (Recomendado por el profe) */}
+        {/* 2. Gráfico de Barras: Rendimiento Promedio por Período */}
         <div className="p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
           <h2 className="text-lg font-bold text-slate-800 mb-6">
             Rendimiento Promedio por Período
@@ -452,6 +539,78 @@ const DashboardAdmin = () => {
               <div className="h-full flex items-center justify-center text-slate-400 font-medium text-center px-4">
                 No hay suficientes datos de períodos para generar la
                 comparativa.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Gráfico de Barras Horizontales: Puntaje Promedio por Competencia */}
+        <div className="lg:col-span-2 p-6 bg-white border shadow-sm border-slate-200 rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Award size={20} className="text-indigo-600" />
+                Puntaje Promedio por Competencia
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Ordenado de menor a mayor puntaje para detectar brechas de
+                desarrollo en la plantilla.
+              </p>
+            </div>
+          </div>
+
+          <div className="h-72 w-full">
+            {promedioCompetencias.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={promedioCompetencias}
+                  layout="vertical"
+                  margin={{ top: 5, right: 24, bottom: 5, left: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    stroke="#e2e8f0"
+                  />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="nombre"
+                    width={175}
+                    tick={{ fill: "#334155", fontSize: 12, fontWeight: 500 }}
+                  />
+                  <Tooltip
+                    formatter={(value, _name, props) => [
+                      `${value} Pts (${props?.payload?.evaluaciones || 0} reg.)`,
+                      props?.payload?.tipo_skill || "Competencia",
+                    ]}
+                    contentStyle={{
+                      borderRadius: "8px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Bar dataKey="promedio" radius={[0, 6, 6, 0]}>
+                    {promedioCompetencias.map((entry, index) => {
+                      const fillColor =
+                        entry.promedio < 60
+                          ? "#f43f5e"
+                          : entry.promedio < 80
+                            ? "#f59e0b"
+                            : "#4f46e5";
+                      return <Cell key={`comp-bar-${index}`} fill={fillColor} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 font-medium text-center px-4">
+                Todavía no hay evaluaciones con desglose por competencia para
+                calcular promedios.
               </div>
             )}
           </div>

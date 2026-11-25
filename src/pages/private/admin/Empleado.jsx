@@ -48,6 +48,8 @@ const Empleado = () => {
   const [empleado, setEmpleado] = useState(null);
   const [evaluaciones, setEvaluaciones] = useState([]);
   const [checkins, setCheckins] = useState([]);
+  const [metas, setMetas] = useState([]);
+  const [planes, setPlanes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorAvatar, setErrorAvatar] = useState(false);
 
@@ -79,9 +81,12 @@ const Empleado = () => {
             !empData.nombre_puesto &&
             !empData.id_puesto
           ) {
-            const listaRes = await fetch("http://localhost:3000/api/empleados", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
+            const listaRes = await fetch(
+              "http://localhost:3000/api/empleados",
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              },
+            );
             if (listaRes.ok) {
               const listaData = await listaRes.json();
               const lista = Array.isArray(listaData)
@@ -100,6 +105,8 @@ const Empleado = () => {
 
           setEmpleado(empData);
           setCheckins(data.checkins || []);
+          setMetas(data.metas || []);
+          setPlanes(data.planes || []);
 
           // ORDEN CRONOLÓGICO ESTRICTO: De más antiguo a más reciente para el gráfico de evaluaciones
           const evaluacionesOrdenadas = [...(data.evaluaciones || [])].sort(
@@ -123,7 +130,10 @@ const Empleado = () => {
     ? PUESTOS_MAP[Number(empleado.id_puesto)]
     : null;
   const nombrePuesto =
-    empleado?.puesto || empleado?.nombre_puesto || puestoInfo?.nombre || "No asignado";
+    empleado?.puesto ||
+    empleado?.nombre_puesto ||
+    puestoInfo?.nombre ||
+    "No asignado";
   const idDeptoResuelto =
     empleado?.id_departamento || puestoInfo?.id_departamento || null;
   const nombreDepartamento =
@@ -152,6 +162,7 @@ const Empleado = () => {
         setEvaluaciones((prev) =>
           prev.filter((ev) => ev.id_evaluacion !== idEvaluacion),
         );
+        window.alert("Evaluación eliminada correctamente.");
       } else {
         const data = await response.json();
         alert(data.mensaje || "No se pudo eliminar la evaluación.");
@@ -180,6 +191,7 @@ const Empleado = () => {
         setCheckins((prev) =>
           prev.filter((chk) => chk.id_checkin !== idCheckin),
         );
+        window.alert("Check-in eliminado correctamente.");
       } else {
         const data = await response.json();
         alert(data.mensaje || "No se pudo eliminar el check-in.");
@@ -281,7 +293,9 @@ const Empleado = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Mail className="text-slate-400 shrink-0" size={18} />
-                <span className="text-sm text-slate-700 break-all">{empleado.email}</span>
+                <span className="text-sm text-slate-700 break-all">
+                  {empleado.email}
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <Briefcase className="text-slate-400 shrink-0" size={18} />
@@ -292,14 +306,18 @@ const Empleado = () => {
               <div className="flex items-center gap-3">
                 <Building2 className="text-slate-400 shrink-0" size={18} />
                 <span className="text-sm text-slate-700">
-                  <strong className="font-semibold text-slate-900">Departamento:</strong>{" "}
+                  <strong className="font-semibold text-slate-900">
+                    Departamento:
+                  </strong>{" "}
                   {nombreDepartamento}
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Layers className="text-slate-400 shrink-0" size={18} />
                 <span className="text-sm text-slate-700">
-                  <strong className="font-semibold text-slate-900">Puesto:</strong>{" "}
+                  <strong className="font-semibold text-slate-900">
+                    Puesto:
+                  </strong>{" "}
                   {nombrePuesto}
                 </span>
               </div>
@@ -450,6 +468,39 @@ const Empleado = () => {
                         </div>
                       </div>
 
+                      {Array.isArray(ev.detalles) && ev.detalles.length > 0 && (
+                        <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                            Competencias evaluadas
+                          </p>
+                          <ul className="space-y-1.5">
+                            {ev.detalles.map((det) => (
+                              <li
+                                key={det.id_detalle}
+                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs bg-white px-3 py-2 rounded-md border border-slate-100"
+                              >
+                                <div>
+                                  <span className="font-semibold text-slate-800">
+                                    {det.competencia}
+                                  </span>
+                                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                                    {det.tipo_skill}
+                                  </span>
+                                  {det.justificacion && (
+                                    <p className="text-slate-500 mt-0.5">
+                                      {det.justificacion}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="font-bold text-blue-700 shrink-0">
+                                  {det.puntaje_obtenido} Pts
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       {ev.analisis_generado && (
                         <div className="bg-blue-50/60 border border-blue-100 rounded-lg p-3 text-xs text-slate-700 space-y-1 mt-2">
                           <div className="flex items-center gap-1.5 font-semibold text-blue-900">
@@ -500,6 +551,70 @@ const Empleado = () => {
                 No hay registros de evaluaciones para mostrar.
               </div>
             )}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="font-semibold text-slate-800">
+                Metas del empleado
+              </h3>
+
+              <div className="mt-4 space-y-3">
+                {metas.length ? (
+                  metas.map((meta) => (
+                    <div
+                      key={meta.id_meta}
+                      className="rounded-lg border border-slate-100 p-3"
+                    >
+                      <p className="font-medium text-slate-800">
+                        {meta.titulo}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-500">
+                        {meta.descripcion || "Sin descripcion"}
+                      </p>
+
+                      <p className="mt-2 text-xs font-semibold text-blue-700">
+                        {meta.estado} - {meta.progreso}%
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    No tiene metas asignadas.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="font-semibold text-slate-800">Planes de accion</h3>
+
+              <div className="mt-4 space-y-3">
+                {planes.length ? (
+                  planes.map((plan) => (
+                    <div
+                      key={plan.id_plan}
+                      className="rounded-lg border border-slate-100 p-3"
+                    >
+                      <p className="text-sm text-slate-700">{plan.objetivo}</p>
+
+                      <p className="mt-2 text-xs font-semibold text-blue-700">
+                        {plan.estado_cumplimiento}
+                        {plan.fecha_limite
+                          ? ` - Limite ${new Date(
+                              plan.fecha_limite,
+                            ).toLocaleDateString("es-AR")}`
+                          : ""}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    No tiene planes de accion generados.
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
 
           {/* 📋 SECCIÓN: Historial de Check-ins con Paginación y Opción de Eliminar */}
