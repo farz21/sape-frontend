@@ -1,9 +1,4 @@
-import {
-  NavLink,
-  Outlet,
-  useNavigate,
-} from "react-router-dom";
-
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -11,8 +6,10 @@ import {
   UserRound,
   Target,
   FolderKanban,
+  Swords,
+  History,
+  Briefcase,
 } from "lucide-react";
-
 import { useAuthStore } from "../../../store/useAuthStore";
 
 const AdminLayout = () => {
@@ -35,18 +32,15 @@ const AdminLayout = () => {
   return (
     <div className="h-screen overflow-hidden bg-slate-100 text-slate-900">
       <div className="flex h-full">
-        <aside className="flex h-full w-[30%] min-w-60 max-w-80 flex-col bg-slate-950 px-5 py-7 text-white">
+        <aside className="flex h-full w-[30%] max-w-80 min-w-60 flex-col bg-slate-950 px-5 py-7 text-white">
           <div className="mb-10 px-2">
-            <p className="text-xs font-bold uppercase tracking-[0.24em] text-indigo-300">
+            <p className="text-xs font-bold tracking-[0.24em] text-indigo-300 uppercase">
               S.A.P.E.
             </p>
-
-            <h1 className="mt-2 text-xl font-extrabold">
-              Panel de gestion
-            </h1>
+            <h1 className="mt-2 text-xl font-extrabold">Panel de gestion</h1>
           </div>
 
-          <p className="mb-3 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">
+          <p className="mb-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
             Administracion
           </p>
 
@@ -61,13 +55,19 @@ const AdminLayout = () => {
               Todos los empleados
             </NavLink>
 
-            <NavLink
-              to="/admin/empleados/comparar"
-              end
-              className={claseEnlace}
-            >
-              <Users size={19} />
+            <NavLink to="/admin/puestos" className={claseEnlace}>
+              <Briefcase size={19} />
+              Puestos y departamentos
+            </NavLink>
+
+            <NavLink to="/admin/duelos/comparar" end className={claseEnlace}>
+              <Swords size={19} />
               Comparacion de empleados
+            </NavLink>
+
+            <NavLink to="/admin/duelos/historial" end className={claseEnlace}>
+              <History size={19} />
+              Historial de duelos
             </NavLink>
 
             <NavLink to="/admin/metas" className={claseEnlace}>
@@ -86,12 +86,8 @@ const AdminLayout = () => {
               <span className="grid h-10 w-10 place-items-center rounded-full bg-indigo-500">
                 <UserRound size={19} />
               </span>
-
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">
-                  {user?.email}
-                </p>
-
+                <p className="truncate text-sm font-semibold">{user?.email}</p>
                 <p className="text-xs text-slate-400">Administrador</p>
               </div>
             </div>
