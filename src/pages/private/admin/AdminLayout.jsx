@@ -9,6 +9,7 @@ import {
   Swords,
   History,
   Briefcase,
+  Award,
 } from "lucide-react";
 import { useAuthStore } from "../../../store/useAuthStore";
 
@@ -58,6 +59,11 @@ const AdminLayout = () => {
             <NavLink to="/admin/puestos" className={claseEnlace}>
               <Briefcase size={19} />
               Puestos y departamentos
+            </NavLink>
+
+            <NavLink to="/admin/competencias" className={claseEnlace}>
+              <Award size={19} />
+              Competencias
             </NavLink>
 
             <NavLink to="/admin/duelos/comparar" end className={claseEnlace}>
