@@ -562,9 +562,11 @@ const ComparacionEmpleados = () => {
   // ==========================================
 
   useEffect(() => {
-    const cargarDueloGuardado = async () => {
-      if (!token || !idDueloQuery) return;
+    if (!token || !idDueloQuery) return;
 
+    let cancelado = false;
+
+    const cargarDueloGuardado = async () => {
       setLoading(true);
       setError("");
       setResultado(null);
@@ -574,21 +576,30 @@ const ComparacionEmpleados = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        if (cancelado) return;
+
         setIdEmpA(String(res.data.candidato_a?.id_empleado || ""));
         setIdEmpB(String(res.data.candidato_b?.id_empleado || ""));
         setResultado(res.data);
       } catch (err) {
+        if (cancelado) return;
         console.error("Error cargando duelo desde historial:", err);
         setError(
           err.response?.data?.mensaje ||
             "No se pudo cargar el duelo seleccionado del historial.",
         );
       } finally {
-        setLoading(false);
+        if (!cancelado) {
+          setLoading(false);
+        }
       }
     };
 
     cargarDueloGuardado();
+
+    return () => {
+      cancelado = true;
+    };
   }, [token, idDueloQuery]);
 
   // ==========================================
