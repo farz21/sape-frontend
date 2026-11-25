@@ -33,6 +33,7 @@ import ComparacionEmpleados from "./pages/private/admin/ComparacionEmpleados";
 import HistorialDuelos from "./pages/private/admin/HistorialDuelos";
 import GestionMetas from "./pages/private/admin/GestionMetas";
 import GestionProyectos from "./pages/private/admin/GestionProyectos";
+import GestionCompetencias from "./pages/private/admin/GestionCompetencias";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
                   element={<FormularioEvaluacion />}
                 />
                 <Route path="puestos" element={<PuestosAdmin />} />
+                <Route path="competencias" element={<GestionCompetencias />} />
                 <Route
                   path="duelos/comparar"
                   element={<ComparacionEmpleados />}
